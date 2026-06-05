@@ -18,7 +18,7 @@ function parseUserId(token: string | null): number | null {
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.userId ?? null;
+    return payload.uid ?? null;
   } catch {
     return null;
   }

@@ -22,9 +22,10 @@ public class JwtProvider {
         this.expiration = expiration;
     }
 
-    public String generateToken(String email) {
+    public String generateToken(Long userId, String email) {
         return Jwts.builder()
                 .subject(email)
+                .claim("uid", userId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
@@ -33,6 +34,14 @@ public class JwtProvider {
 
     public String getEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public Long getUserId(String token) {
+        return parseClaims(token).get("uid", Long.class);
+    }
+
+    public java.time.Instant getExpiration(String token) {
+        return parseClaims(token).getExpiration().toInstant();
     }
 
     public boolean validateToken(String token) {
