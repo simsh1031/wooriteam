@@ -1,0 +1,50 @@
+.main-page { padding-top: 0; }
+
+.hero {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding-top: calc(var(--header-height) + 64px); padding-bottom: 64px;
+}
+.hero-sub { font-size: 15px; color: var(--green-500); font-weight: 600; margin-bottom: 12px; }
+.hero-title {
+  font-size: 44px; font-weight: 800; line-height: 1.25; letter-spacing: -1.5px;
+  color: var(--gray-900); margin-bottom: 20px;
+}
+.hero-desc { font-size: 16px; color: var(--gray-500); line-height: 1.7; margin-bottom: 36px; }
+.hero-actions { display: flex; gap: 12px; }
+
+.section-title {
+  font-size: 22px; font-weight: 800; color: var(--gray-900);
+  margin-bottom: 24px; letter-spacing: -0.5px;
+}
+
+.role-tabs-section { padding: 48px 20px; }
+.role-tab-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.role-tab-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 28px 16px; gap: 10px; transition: all 0.15s;
+}
+.role-tab-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--green-200); }
+.role-tab-icon { font-size: 32px; }
+.role-tab-name { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+.role-tab-desc { font-size: 13px; color: var(--gray-400); line-height: 1.5; }
+
+.how-section { padding: 48px 20px 64px; }
+.how-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.how-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 24px 20px;
+}
+.how-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--green-500); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.how-card strong { font-size: 15px; color: var(--gray-900); }
+.how-card p { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 30px; }
+  .role-tab-grid { grid-template-columns: repeat(2, 1fr); }
+  .how-grid { grid-template-columns: repeat(2, 1fr); }
+}

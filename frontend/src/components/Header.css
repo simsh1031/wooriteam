@@ -1,0 +1,21 @@
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-height);
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+.header-inner {
+  height: 100%; display: flex; align-items: center; justify-content: space-between;
+}
+.header-logo {
+  font-size: 20px; font-weight: 800; color: var(--green-500); letter-spacing: -0.5px;
+}
+.header-nav {
+  display: flex; align-items: center; gap: 8px;
+}
+.header-link {
+  font-size: 14px; font-weight: 500; color: var(--gray-700);
+  padding: 6px 10px; border-radius: var(--radius); transition: all 0.15s;
+}
+.header-link:hover { color: var(--green-500); background: var(--green-50); }
