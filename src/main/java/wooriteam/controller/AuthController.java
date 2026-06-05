@@ -1,9 +1,11 @@
 package wooriteam.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import wooriteam.common.ApiResponse;
 import wooriteam.dto.request.LoginRequest;
@@ -31,13 +33,22 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
+            authService.logout(bearer.substring(7));
+        }
         return ResponseEntity.ok(ApiResponse.ok());
     }
 
     @DeleteMapping("/withdraw")
-    public ResponseEntity<ApiResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        authService.withdraw(userDetails.getUserId());
+    public ResponseEntity<ApiResponse<Void>> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        String token = (StringUtils.hasText(bearer) && bearer.startsWith("Bearer "))
+                ? bearer.substring(7) : null;
+        authService.withdraw(userDetails.getUserId(), token);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

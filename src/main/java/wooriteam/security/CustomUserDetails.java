@@ -21,6 +21,12 @@ public class CustomUserDetails implements UserDetails {
         this.password = user.getPassword();
     }
 
+    public CustomUserDetails(Long userId, String email) {
+        this.userId = userId;
+        this.email = email;
+        this.password = null;
+    }
+
     @Override
     public String getUsername() {
         return email;

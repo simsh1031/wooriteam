@@ -11,4 +11,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findByPost(Post post);
     List<Application> findByUserOrderByCreatedAtDesc(User user);
     boolean existsByPostAndRoleIdAndUser(wooriteam.entity.Post post, Long roleId, User user);
+    void deleteByUser(User user);
+    void deleteByPostIn(List<Post> posts);
 }

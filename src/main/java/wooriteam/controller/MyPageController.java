@@ -1,12 +1,12 @@
 package wooriteam.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import wooriteam.common.ApiResponse;
+import wooriteam.dto.request.PasswordChangeRequest;
 import wooriteam.dto.response.MyApplicationResponse;
 import wooriteam.dto.response.PostSummaryResponse;
 import wooriteam.security.CustomUserDetails;
@@ -31,5 +31,13 @@ public class MyPageController {
     public ResponseEntity<ApiResponse<List<MyApplicationResponse>>> getMyApplications(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(myPageService.getMyApplications(userDetails.getUserId())));
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        myPageService.changePassword(userDetails.getUserId(), request);
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }

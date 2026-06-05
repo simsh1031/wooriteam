@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getMyPosts, getMyApplications } from '../api/applications';
 import { closePost, deletePost } from '../api/posts';
+import { changePassword, withdraw } from '../api/auth';
 import type { MyApplicationResponse, PostSummaryResponse } from '../api/types';
 import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import './MyPage.css';
 
-type Tab = 'posts' | 'applications';
+type Tab = 'posts' | 'applications' | 'settings';
 
 export default function MyPage() {
-  const { nickname } = useAuth();
+  const { nickname, logout } = useAuth();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('posts');
 
   const [myPosts, setMyPosts] = useState<PostSummaryResponse[]>([]);
   const [myApps, setMyApps] = useState<MyApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwCurrentWrong, setPwCurrentWrong] = useState(false);
 
   useEffect(() => {
     Promise.all([getMyPosts(), getMyApplications()])
@@ -38,6 +46,39 @@ export default function MyPage() {
     setMyPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError('');
+    setPwSuccess(false);
+    if (pwForm.newPassword.length < 8) {
+      setPwError('새 비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+    setPwLoading(true);
+    try {
+      await changePassword(pwForm.currentPassword, pwForm.newPassword);
+      setPwSuccess(true);
+      setPwForm({ currentPassword: '', newPassword: '' });
+    } catch (err: any) {
+      const msg = err.response?.data?.message ?? '비밀번호 변경에 실패했습니다.';
+      setPwError(msg);
+      if (err.response?.status === 400 && err.response?.data?.message?.includes('현재 비밀번호')) setPwCurrentWrong(true);
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.')) return;
+    try {
+      await withdraw();
+      logout();
+      navigate('/');
+    } catch {
+      alert('탈퇴 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="mypage page">
       <div className="container">
@@ -56,9 +97,12 @@ export default function MyPage() {
           <button className={`mypage-tab ${tab === 'applications' ? 'active' : ''}`} onClick={() => setTab('applications')}>
             내가 지원한 공고 <span className="tab-count">{myApps.length}</span>
           </button>
+          <button className={`mypage-tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>
+            계정 관리
+          </button>
         </div>
 
-        {loading ? (
+        {loading && tab !== 'settings' ? (
           <div className="spinner" />
         ) : tab === 'posts' ? (
           myPosts.length === 0 ? (
@@ -94,7 +138,7 @@ export default function MyPage() {
               ))}
             </div>
           )
-        ) : (
+        ) : tab === 'applications' ? (
           myApps.length === 0 ? (
             <div className="empty-state">
               <p>아직 지원한 공고가 없어요.</p>
@@ -114,6 +158,47 @@ export default function MyPage() {
               ))}
             </div>
           )
+        ) : (
+          <div className="settings-section">
+            <div className="settings-card card">
+              <h2 className="settings-title">비밀번호 변경</h2>
+              <form onSubmit={handlePasswordChange} className="settings-form">
+                <div className="form-group">
+                  <label className="form-label">현재 비밀번호</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="현재 비밀번호를 입력하세요"
+                    value={pwForm.currentPassword}
+                    onChange={(e) => { setPwForm((f) => ({ ...f, currentPassword: e.target.value })); setPwCurrentWrong(false); }}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">새 비밀번호</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="새 비밀번호를 입력하세요 (8자 이상)"
+                    value={pwForm.newPassword}
+                    onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                    required
+                  />
+                </div>
+                {pwError && <p className="settings-error">{pwError}</p>}
+                {pwSuccess && <p className="settings-success">비밀번호가 변경되었습니다.</p>}
+                <button type="submit" className="btn btn-primary" disabled={pwLoading || pwCurrentWrong}>
+                  {pwLoading ? '변경 중...' : '변경하기'}
+                </button>
+              </form>
+            </div>
+
+            <div className="settings-card card danger-zone">
+              <h2 className="settings-title danger-title">회원탈퇴</h2>
+              <p className="danger-desc">탈퇴하면 모든 공고와 지원 내역이 삭제되며 복구할 수 없습니다.</p>
+              <button onClick={handleWithdraw} className="btn btn-danger">회원탈퇴</button>
+            </div>
+          </div>
         )}
       </div>
     </div>
