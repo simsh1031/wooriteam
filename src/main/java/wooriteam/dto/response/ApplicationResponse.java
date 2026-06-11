@@ -17,6 +17,7 @@ public class ApplicationResponse {
     private final String experience;
     private final String contact;
     private final LocalDateTime createdAt;
+    private final boolean withdrawn;
 
     public ApplicationResponse(Application application) {
         this.id = application.getId();
@@ -28,5 +29,6 @@ public class ApplicationResponse {
         this.experience = application.getExperience();
         this.contact = application.getContact();
         this.createdAt = application.getCreatedAt();
+        this.withdrawn = application.isWithdrawn();
     }
 }

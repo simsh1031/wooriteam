@@ -34,4 +34,27 @@ public class ApplicationController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(applicationService.getApplicationsByPost(postId, userDetails.getUserId())));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> getMyApplication(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(applicationService.getMyApplication(postId, userDetails.getUserId())));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> updateMyApplication(
+            @PathVariable Long postId,
+            @Valid @RequestBody ApplicationRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(applicationService.updateMyApplication(postId, request, userDetails.getUserId())));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> withdrawMyApplication(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        applicationService.withdrawMyApplication(postId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
 }

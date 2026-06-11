@@ -238,7 +238,7 @@ export default function MyPage() {
                   {app.postClosed && <span className="badge badge-red">마감</span>}
                   <span className="myapp-date">{new Date(app.createdAt).toLocaleDateString('ko-KR')} 지원</span>
                 </div>
-                <Link to={`/posts/${app.postId}`} className="myapp-title">{app.postTitle}</Link>
+                <Link to={`/posts/${app.postId}/apply`} className="myapp-title">{app.postTitle}</Link>
               </div>
             ))}
           </div>

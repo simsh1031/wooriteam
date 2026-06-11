@@ -39,10 +39,17 @@ public class ApplicationService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        if (applicationRepository.existsByPostAndRoleIdAndUser(post, role.getId(), user)) {
-            throw new CustomException(ErrorCode.ALREADY_APPLIED);
+
+        Application application = applicationRepository.findByPostAndUser(post, user).orElse(null);
+        if (application != null) {
+            if (!application.isWithdrawn()) {
+                throw new CustomException(ErrorCode.ALREADY_APPLIED);
+            }
+            application.update(role, request.getMotivation(), request.getTechStack(), request.getExperience(), request.getContact());
+            return new ApplicationResponse(application);
         }
-        Application application = Application.builder()
+
+        application = Application.builder()
                 .post(post)
                 .role(role)
                 .user(user)
@@ -61,8 +68,47 @@ public class ApplicationService {
         if (!post.getUser().getId().equals(userId)) {
             throw new CustomException(ErrorCode.APPLICATION_ACCESS_DENIED);
         }
-        return applicationRepository.findByPost(post).stream()
+        return applicationRepository.findByPostAndWithdrawnFalse(post).stream()
                 .map(ApplicationResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicationResponse getMyApplication(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        return applicationRepository.findByPostAndUser(post, user)
+                .map(ApplicationResponse::new)
+                .orElse(null);
+    }
+
+    public ApplicationResponse updateMyApplication(Long postId, ApplicationRequest request, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Application application = applicationRepository.findByPostAndUser(post, user)
+                .filter(a -> !a.isWithdrawn())
+                .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+        PostRole role = postRoleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ROLE_NOT_FOUND));
+        if (!role.getPost().getId().equals(postId)) {
+            throw new CustomException(ErrorCode.ROLE_NOT_IN_POST);
+        }
+        application.update(role, request.getMotivation(), request.getTechStack(), request.getExperience(), request.getContact());
+        return new ApplicationResponse(application);
+    }
+
+    public void withdrawMyApplication(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Application application = applicationRepository.findByPostAndUser(post, user)
+                .filter(a -> !a.isWithdrawn())
+                .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+        application.withdraw();
     }
 }

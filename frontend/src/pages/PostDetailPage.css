@@ -43,6 +43,7 @@
   border: 2px solid var(--gray-900); box-shadow: 4px 4px 0 var(--green-200);
 }
 .apply-cta-msg { font-size: 14px; color: var(--gray-500); }
+.apply-cta-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
 @media (max-width: 768px) {
   .post-detail-card { padding: 24px 20px; }

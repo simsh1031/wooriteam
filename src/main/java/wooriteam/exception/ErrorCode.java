@@ -21,6 +21,7 @@ public enum ErrorCode {
 
     ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 지원한 역할입니다."),
     APPLICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "지원자 목록 조회 권한이 없습니다."),
+    APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "지원 내역을 찾을 수 없습니다."),
 
     PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필을 찾을 수 없습니다."),
     PROFILE_NOT_PUBLIC(HttpStatus.FORBIDDEN, "비공개 프로필입니다."),
