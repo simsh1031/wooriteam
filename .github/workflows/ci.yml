@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [feature/backend-cicd] #[main]
 
 permissions:
   contents: read
