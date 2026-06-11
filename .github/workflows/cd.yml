@@ -2,7 +2,7 @@ name: CD - Backend
 
 on:
   push:
-    branches: [feature/backend-cicd] #[main]
+    branches: [main]
     paths:
       - 'src/**'
       - 'build.gradle'

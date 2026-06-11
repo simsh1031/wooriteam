@@ -1,13 +1,19 @@
 import { Link } from 'react-router-dom';
-import type { PostSummaryResponse } from '../api/types';
+import type { PostSummaryResponse, RoleType } from '../api/types';
 import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import './PostCard.css';
 
 interface Props {
   post: PostSummaryResponse;
+  activeRole?: RoleType;
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, activeRole }: Props) {
+  const techStacks = activeRole
+    ? (post.roleStacks.find((r) => r.roleType === activeRole)?.techStack ?? '')
+        .split(',').map((s) => s.trim()).filter(Boolean)
+    : [];
+
   return (
     <Link to={`/posts/${post.id}`} className="post-card card">
       <div className="post-card-top">
@@ -21,12 +27,22 @@ export default function PostCard({ post }: Props) {
       <h3 className="post-card-title">{post.title}</h3>
       <div className="post-card-meta">
         {post.difficulty && (
-          <span className="badge badge-gray">{DIFFICULTY_LABELS[post.difficulty]}</span>
+          <span className="badge badge-yellow">{DIFFICULTY_LABELS[post.difficulty]}</span>
         )}
         {post.projectType && (
           <span className="badge badge-gray">{PROJECT_TYPE_LABELS[post.projectType]}</span>
         )}
       </div>
+      {techStacks.length > 0 && (
+        <div className="post-card-stacks">
+          {techStacks.slice(0, 4).map((ts) => (
+            <span key={ts} className="badge badge-outline">{ts}</span>
+          ))}
+          {techStacks.length > 4 && (
+            <span className="badge badge-outline">+{techStacks.length - 4}</span>
+          )}
+        </div>
+      )}
       <div className="post-card-footer">
         <span className="post-card-author">{post.authorNickname}</span>
         <span className="post-card-date">{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>

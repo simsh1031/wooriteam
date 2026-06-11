@@ -10,6 +10,9 @@ import PostFormPage from './pages/PostFormPage';
 import ApplyPage from './pages/ApplyPage';
 import ApplicantsPage from './pages/ApplicantsPage';
 import MyPage from './pages/MyPage';
+import SearchResultPage from './pages/SearchResultPage';
+import ProfilesPage from './pages/ProfilesPage';
+import ProfileDetailPage from './pages/ProfileDetailPage';
 
 export default function App() {
   return (
@@ -27,6 +30,9 @@ export default function App() {
           <Route path="/posts/:id/apply" element={<ApplyPage />} />
           <Route path="/posts/:id/applicants" element={<ApplicantsPage />} />
           <Route path="/my" element={<MyPage />} />
+          <Route path="/search" element={<SearchResultPage />} />
+          <Route path="/profiles" element={<ProfilesPage />} />
+          <Route path="/profiles/:userId" element={<ProfileDetailPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

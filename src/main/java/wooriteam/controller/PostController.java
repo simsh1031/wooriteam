@@ -10,6 +10,8 @@ import wooriteam.dto.request.PostCreateRequest;
 import wooriteam.dto.request.PostUpdateRequest;
 import wooriteam.dto.response.PostDetailResponse;
 import wooriteam.dto.response.PostSummaryResponse;
+import wooriteam.enums.Difficulty;
+import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 import wooriteam.security.CustomUserDetails;
 import wooriteam.service.PostService;
@@ -25,8 +27,12 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getPosts(
-            @RequestParam(required = false) RoleType role) {
-        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(role)));
+            @RequestParam(required = false) RoleType role,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) ProjectType projectType,
+            @RequestParam(required = false) List<String> techStack,
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(role, difficulty, projectType, techStack, keyword)));
     }
 
     @GetMapping("/{postId}")
