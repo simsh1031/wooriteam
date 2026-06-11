@@ -56,7 +56,7 @@ public class MyPageService {
     public List<MyApplicationResponse> getMyApplications(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        return applicationRepository.findByUserOrderByCreatedAtDesc(user).stream()
+        return applicationRepository.findByUserAndWithdrawnFalseOrderByCreatedAtDesc(user).stream()
                 .map(MyApplicationResponse::new)
                 .collect(Collectors.toList());
     }

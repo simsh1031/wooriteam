@@ -39,6 +39,9 @@ public class Application {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "withdrawn", nullable = false)
+    private boolean withdrawn = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -53,5 +56,18 @@ public class Application {
         this.techStack = techStack;
         this.experience = experience;
         this.contact = contact;
+    }
+
+    public void update(PostRole role, String motivation, String techStack, String experience, String contact) {
+        this.role = role;
+        this.motivation = motivation;
+        this.techStack = techStack;
+        this.experience = experience;
+        this.contact = contact;
+        this.withdrawn = false;
+    }
+
+    public void withdraw() {
+        this.withdrawn = true;
     }
 }

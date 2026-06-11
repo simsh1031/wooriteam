@@ -9,17 +9,18 @@ interface Props {
   onChange: (selected: string[]) => void;
   placeholder?: string;
   maxHeight?: number;
+  options?: string[];
 }
 
 export interface TechStackSelectorHandle {
   open: () => void;
 }
 
-const TechStackSelector = forwardRef<TechStackSelectorHandle, Props>(function TechStackSelector({ roleType, selected, onChange, placeholder = '기술 스택 선택', maxHeight = 280 }, forwardedRef) {
+const TechStackSelector = forwardRef<TechStackSelectorHandle, Props>(function TechStackSelector({ roleType, selected, onChange, placeholder = '기술 스택 선택', maxHeight = 280, options: optionsProp }, forwardedRef) {
   const [open, setOpen] = useState(false);
   const [customInput, setCustomInput] = useState('');
   const ref = useRef<HTMLDivElement>(null);
-  const options = TECH_STACKS[roleType];
+  const options = optionsProp ?? TECH_STACKS[roleType];
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

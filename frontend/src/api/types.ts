@@ -92,6 +92,7 @@ export interface ApplicationResponse {
   experience: string | null;
   contact: string;
   createdAt: string;
+  withdrawn: boolean;
 }
 
 export interface MyApplicationResponse {
