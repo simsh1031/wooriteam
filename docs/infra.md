@@ -626,6 +626,7 @@ GitHub Actions 전용 계정. Console 접근 불가 (access key만).
       "Effect": "Allow",
       "Action": [
         "ecr:GetAuthorizationToken",
+        "ecr:DescribeRepositories",
         "ecr:BatchCheckLayerAvailability",
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",

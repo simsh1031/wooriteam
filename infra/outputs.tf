@@ -27,10 +27,15 @@ output "nat_gateway_eips" {
 
 # ─── 4단계 (ecr.tf) ────────────────────────────────────────────────────────────
 
-# output "ecr_repository_url" {
-#   description = "ECR 레포지토리 URL (이미지 push 주소)"
-#   value       = aws_ecr_repository.main.repository_url
-# }
+output "ecr_repository_url" {
+  description = "ECR 레포지토리 URL (이미지 push 주소)"
+  value       = aws_ecr_repository.main.repository_url
+}
+
+output "ecr_repository_name" {
+  description = "ECR 레포지토리 이름"
+  value       = aws_ecr_repository.main.name
+}
 
 # ─── 5단계 (alb.tf, ecs.tf, rds.tf) ───────────────────────────────────────────
 

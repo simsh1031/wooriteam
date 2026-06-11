@@ -1,0 +1,10 @@
+.git
+.gradle
+.idea
+build
+out
+frontend
+infra
+docs
+*.md
+.env
