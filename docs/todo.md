@@ -100,11 +100,50 @@
 
 ## 인프라 / CI·CD (2단계)
 
-- [ ] Terraform으로 VPC, 서브넷, ALB, ECS Fargate, RDS, Secrets Manager 구성
-  - VPC: 퍼블릭 서브넷 2개(ALB·NAT GW), 프라이빗 서브넷 2개(ECS·RDS) — 2 AZ
-  - RDS: Multi-AZ 활성화, 자동 백업 7일 보존
-  - ECS: 최소 태스크 2개, Auto Scaling (CPU 70% 기준), 롤링 배포
-  - 보안 그룹 3계층: ALB SG → ECS SG → RDS SG (최소 권한)
+### Terraform 구축 순서 (`infra/`)
+
+> 설계서: `docs/infra-ecs.md` | 의존 관계 상 아래 순서대로 진행
+
+**0단계 — 부트스트랩 (수동, `terraform init` 전 1회)**
+- [ ] S3 버킷 생성: `wooriteam-tfstate` (ap-northeast-2, versioning 활성화)
+- [ ] DynamoDB 테이블 생성: `wooriteam-tfstate-lock` (파티션 키: `LockID`, 타입: String)
+- [ ] `terraform init` 실행 (S3 백엔드 연결 확인)
+
+**1단계 — 기반 설정**
+- [x] `infra/main.tf` — provider, S3 백엔드
+- [x] `infra/variables.tf` — 전체 변수 선언
+- [x] `infra/outputs.tf` — 출력값 (단계별 주석 처리)
+- [ ] `terraform.tfvars` 실제 값 작성 (`terraform.tfvars.example` 참고, gitignore 대상)
+
+**2단계 — 네트워크**
+- [x] `infra/vpc.tf` — VPC, 서브넷 6개, IGW, NAT GW 2개, 라우팅 테이블 4개
+
+**3단계 — 보안 그룹**
+- [x] `infra/security_groups.tf` — alb-sg → ecs-sg → rds-sg
+
+**4단계 — 독립 리소스**
+- [ ] `infra/ecr.tf` — ECR 레포지토리 + 수명주기 정책
+- [ ] `infra/secrets.tf` — Secrets Manager 시크릿 4개
+- [ ] `infra/iam.tf` — Task Execution Role, CI/CD IAM User, Grafana IAM User, Lambda Role
+- [ ] `infra/s3.tf` — ALB 로그 버킷 + 프론트엔드 정적 호스팅 버킷
+
+**5단계 — 컴퓨팅 & DB**
+- [ ] `infra/rds.tf` — RDS MySQL 8.0 Multi-AZ, Subnet Group, Parameter Group
+- [ ] `infra/alb.tf` — ALB, 타겟 그룹, 리스너
+- [ ] `infra/ecs.tf` — ECS Cluster, Task Definition, Service, Auto Scaling
+
+**6단계 — CDN & DNS**
+- [ ] `infra/cloudfront.tf` — CloudFront 배포, OAC, 캐시 Behavior
+- [ ] `infra/route53.tf` — Hosted Zone, A 레코드, ACM 인증서 (도메인 구매 후)
+
+**7단계 — 모니터링**
+- [ ] `infra/cloudwatch.tf` — 로그 그룹, 알람 11개, SNS, Dashboard
+- [ ] `infra/lambda.tf` — alert-notifier Lambda + SNS 구독
+
+---
+
+### CI/CD
+
 - [ ] GitHub Actions CI 파이프라인 (빌드 → 테스트 → ECR 푸시)
 - [ ] GitHub Actions CD 파이프라인 (ECS Fargate 롤링 배포)
   - `aws ecs update-service --force-new-deployment`
