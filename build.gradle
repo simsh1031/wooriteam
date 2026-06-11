@@ -13,6 +13,9 @@ java {
 	}
 }
 
+// Tomcat 10.1.54에 포함된 CRITICAL CVE(2026-41293, 2026-43512, 2026-43515) 회피
+ext['tomcat.version'] = '10.1.55'
+
 repositories {
 	mavenCentral()
 }
