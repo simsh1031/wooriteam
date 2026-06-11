@@ -10,10 +10,13 @@ import wooriteam.dto.response.PostSummaryResponse;
 import wooriteam.entity.Post;
 import wooriteam.entity.PostRole;
 import wooriteam.entity.User;
+import wooriteam.enums.Difficulty;
+import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 import wooriteam.exception.CustomException;
 import wooriteam.exception.ErrorCode;
 import wooriteam.repository.PostRepository;
+import wooriteam.repository.PostSpecification;
 import wooriteam.repository.UserRepository;
 
 import java.util.List;
@@ -50,10 +53,11 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getPosts(RoleType roleType) {
-        List<Post> posts = (roleType != null)
-                ? postRepository.findByRoleType(roleType)
-                : postRepository.findAllWithRoles();
+    public List<PostSummaryResponse> getPosts(RoleType roleType, Difficulty difficulty,
+                                              ProjectType projectType, List<String> techStacks,
+                                              String keyword) {
+        List<Post> posts = postRepository.findAll(
+                PostSpecification.withFilters(roleType, difficulty, projectType, techStacks, keyword));
         return posts.stream().map(PostSummaryResponse::new).collect(Collectors.toList());
     }
 

@@ -4,6 +4,15 @@
 
 ---
 
+## Git 작업 (즉시 해야 할 것)
+
+- [ ] `feature/infra-docs` 브랜치 생성 후 `infra/`, `docs/` 만 커밋 & 푸시
+- [ ] 기능 업데이트 전용 브랜치 생성 후 `src/`, `frontend/` 변경사항 커밋 & 푸시
+  - 브랜치 예시: `feature/user-profile`
+  - 포함 대상: UserProfile 엔티티, UserController, UserService, UserProfileRepository, ProfilesPage, ProfileDetailPage, SearchResultPage, TechStackSelector 등 신규·수정 파일 전체
+
+---
+
 ## Must (MVP 필수) — 1단계 완료 ✅
 
 - [x] 도메인·데이터 모델 설계 (User, Post, PostRole, Application)

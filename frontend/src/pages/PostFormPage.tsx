@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { createPost, getPost, updatePost } from '../api/posts';
 import type { Difficulty, PostRoleRequest, ProjectType, RoleType } from '../api/types';
 import { ROLE_LABELS } from '../api/types';
+import TechStackSelector from '../components/TechStackSelector';
 import './PostFormPage.css';
 
 const ROLE_OPTIONS: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
@@ -32,6 +33,7 @@ export default function PostFormPage() {
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
   const [selectedRoles, setSelectedRoles] = useState<RoleType[]>([]);
   const [roleDetails, setRoleDetails] = useState<Record<RoleType, PostRoleRequest>>({} as any);
+  const [roleTechStacks, setRoleTechStacks] = useState<Record<RoleType, string[]>>({} as any);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -46,8 +48,13 @@ export default function PostFormPage() {
       const roles = p.roles.map((r) => r.roleType);
       setSelectedRoles(roles);
       const details: Record<string, PostRoleRequest> = {};
-      p.roles.forEach((r) => { details[r.roleType] = { roleType: r.roleType, description: r.description ?? '', techStack: r.techStack ?? '' }; });
+      const stacks: Record<string, string[]> = {};
+      p.roles.forEach((r) => {
+        details[r.roleType] = { roleType: r.roleType, description: r.description ?? '', techStack: r.techStack ?? '' };
+        stacks[r.roleType] = r.techStack ? r.techStack.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      });
       setRoleDetails(details as any);
+      setRoleTechStacks(stacks as any);
     });
   }, [id]);
 
@@ -57,11 +64,19 @@ export default function PostFormPage() {
         ? prev.filter((r) => r !== role)
         : [...prev, role]
     );
-    setRoleDetails((prev) => prev[role] ? prev : { ...prev, [role]: emptyRole(role) });
+    if (!roleDetails[role]) {
+      setRoleDetails((prev) => ({ ...prev, [role]: emptyRole(role) }));
+      setRoleTechStacks((prev) => ({ ...prev, [role]: [] }));
+    }
   };
 
-  const updateRoleDetail = (role: RoleType, field: 'description' | 'techStack', value: string) => {
-    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], [field]: value } }));
+  const updateRoleDescription = (role: RoleType, value: string) => {
+    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], description: value } }));
+  };
+
+  const updateRoleTechStack = (role: RoleType, stacks: string[]) => {
+    setRoleTechStacks((prev) => ({ ...prev, [role]: stacks }));
+    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], techStack: stacks.join(', ') } }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -156,18 +171,32 @@ export default function PostFormPage() {
                   className="form-input form-textarea"
                   placeholder={`${ROLE_LABELS[role]} 역할의 할 일을 설명해 주세요`}
                   value={roleDetails[role]?.description ?? ''}
-                  onChange={(e) => updateRoleDetail(role, 'description', e.target.value)}
+                  onChange={(e) => updateRoleDescription(role, e.target.value)}
                   rows={3}
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">기술 스택 (쉼표로 구분)</label>
-                <input
-                  className="form-input"
-                  placeholder="예: Java, Spring Boot, MySQL"
-                  value={roleDetails[role]?.techStack ?? ''}
-                  onChange={(e) => updateRoleDetail(role, 'techStack', e.target.value)}
+              <div className="form-group form-group-spaced">
+                <label className="form-label">기술 스택</label>
+                <TechStackSelector
+                  roleType={role}
+                  selected={roleTechStacks[role] ?? []}
+                  onChange={(stacks) => updateRoleTechStack(role, stacks)}
+                  placeholder={`${ROLE_LABELS[role]} 기술 스택 선택`}
                 />
+                {(roleTechStacks[role] ?? []).length > 0 && (
+                  <div className="ts-tags ts-tags-below">
+                    {(roleTechStacks[role] ?? []).map((s) => (
+                      <span key={s} className="ts-tag">
+                        {s}
+                        <button
+                          type="button"
+                          className="ts-tag-remove"
+                          onClick={() => updateRoleTechStack(role, (roleTechStacks[role] ?? []).filter((x) => x !== s))}
+                        >×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

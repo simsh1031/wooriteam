@@ -1,14 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getMyPosts, getMyApplications } from '../api/applications';
 import { closePost, deletePost } from '../api/posts';
 import { changePassword, withdraw } from '../api/auth';
-import type { MyApplicationResponse, PostSummaryResponse } from '../api/types';
-import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
+import { getMyProfile, updateMyProfile } from '../api/profiles';
+import type { MyApplicationResponse, PostSummaryResponse, UserProfileResponse, RoleType, CareerType } from '../api/types';
+import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS, TECH_STACKS, CAREER_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
+import TechStackSelector, { type TechStackSelectorHandle } from '../components/TechStackSelector';
 import './MyPage.css';
 
-type Tab = 'posts' | 'applications' | 'settings';
+type Tab = 'posts' | 'applications' | 'profile' | 'settings';
+
+const ALL_ROLES: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
+
+type StackGroupKey = RoleType | 'ETC';
+const STACK_GROUP_ORDER: StackGroupKey[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING', 'ETC'];
+const STACK_GROUP_LABELS: Record<StackGroupKey, string> = { ...ROLE_LABELS, ETC: '기타' };
+
+function groupStacksByRole(stacks: string[]): Record<StackGroupKey, string[]> {
+  const groups: Record<StackGroupKey, string[]> = { BACKEND: [], FRONTEND: [], DESIGN: [], PLANNING: [], ETC: [] };
+  for (const stack of stacks) {
+    const matchedRoles = ALL_ROLES.filter((r) => TECH_STACKS[r].includes(stack));
+    if (matchedRoles.length === 0) groups.ETC.push(stack);
+    else matchedRoles.forEach((r) => groups[r].push(stack));
+  }
+  return groups;
+}
 
 export default function MyPage() {
   const { nickname, logout } = useAuth();
@@ -25,6 +43,20 @@ export default function MyPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwCurrentWrong, setPwCurrentWrong] = useState(false);
 
+  // profile state
+  const [profileData, setProfileData] = useState<UserProfileResponse | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSelectedStacks, setProfileSelectedStacks] = useState<string[]>([]);
+  const [profileCareerType, setProfileCareerType] = useState<CareerType | ''>('');
+  const [profileExperience, setProfileExperience] = useState('');
+  const [profileIsPublic, setProfileIsPublic] = useState(false);
+  const [profileContactEmail, setProfileContactEmail] = useState('');
+  const [profileRole, setProfileRole] = useState<RoleType>('BACKEND');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
   useEffect(() => {
     Promise.all([getMyPosts(), getMyApplications()])
       .then(([postsRes, appsRes]) => {
@@ -33,6 +65,26 @@ export default function MyPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (tab === 'profile' && !profileLoaded) {
+      setProfileLoading(true);
+      getMyProfile()
+        .then((res) => {
+          const p = res.data.data;
+          setProfileData(p);
+          setProfileCareerType(p.careerType ?? '');
+          setProfileExperience(p.experience ?? '');
+          setProfileIsPublic(p.isPublic);
+          setProfileContactEmail(p.contactEmail ?? '');
+          if (p.techStack) {
+            setProfileSelectedStacks(p.techStack.split(',').map((s) => s.trim()).filter(Boolean));
+          }
+          setProfileLoaded(true);
+        })
+        .finally(() => setProfileLoading(false));
+    }
+  }, [tab, profileLoaded]);
 
   const handleClose = async (postId: number) => {
     if (!confirm('공고를 마감하시겠습니까?')) return;
@@ -79,6 +131,35 @@ export default function MyPage() {
     }
   };
 
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSuccess(false);
+    if (profileIsPublic && !profileContactEmail.trim()) {
+      setProfileError('공개 프로필로 설정하려면 연락 이메일을 입력해야 합니다.');
+      return;
+    }
+    setProfileSaving(true);
+    try {
+      const res = await updateMyProfile({
+        techStack: profileSelectedStacks.join(', '),
+        careerType: profileCareerType || null,
+        experience: profileExperience,
+        isPublic: profileIsPublic,
+        contactEmail: profileContactEmail,
+      });
+      setProfileData(res.data.data);
+      setProfileSuccess(true);
+    } catch (err: any) {
+      setProfileError(err.response?.data?.message ?? '프로필 저장에 실패했습니다.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const stackGroups = groupStacksByRole(profileSelectedStacks);
+  const techStackSelectorRef = useRef<TechStackSelectorHandle>(null);
+
   return (
     <div className="mypage page">
       <div className="container">
@@ -97,68 +178,206 @@ export default function MyPage() {
           <button className={`mypage-tab ${tab === 'applications' ? 'active' : ''}`} onClick={() => setTab('applications')}>
             내가 지원한 공고 <span className="tab-count">{myApps.length}</span>
           </button>
+          <button className={`mypage-tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>
+            프로필 편집
+          </button>
           <button className={`mypage-tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>
             계정 관리
           </button>
         </div>
 
-        {loading && tab !== 'settings' ? (
+        {tab === 'posts' && (loading ? (
           <div className="spinner" />
-        ) : tab === 'posts' ? (
-          myPosts.length === 0 ? (
-            <div className="empty-state">
-              <p>아직 올린 공고가 없어요.</p>
-              <Link to="/posts/new" className="btn btn-outline" style={{ marginTop: 16 }}>첫 공고 올리기</Link>
-            </div>
-          ) : (
-            <div className="mypost-list">
-              {myPosts.map((post) => (
-                <div key={post.id} className="mypost-card card">
-                  <div className="mypost-card-top">
-                    <div className="mypost-badges">
-                      {post.roleTypes.map((r) => <span key={r} className="badge badge-green">{ROLE_LABELS[r]}</span>)}
-                      {post.closed && <span className="badge badge-red">마감</span>}
-                    </div>
-                    <div className="mypost-actions">
-                      {!post.closed && (
-                        <button onClick={() => handleClose(post.id)} className="btn btn-outline btn-sm">마감 처리</button>
-                      )}
-                      <Link to={`/posts/${post.id}/applicants`} className="btn btn-ghost btn-sm">지원자 보기</Link>
-                      <Link to={`/posts/${post.id}/edit`} className="btn btn-ghost btn-sm">수정</Link>
-                      <button onClick={() => handleDelete(post.id)} className="btn btn-danger btn-sm">삭제</button>
-                    </div>
-                  </div>
-                  <Link to={`/posts/${post.id}`} className="mypost-title">{post.title}</Link>
-                  <div className="mypost-meta">
-                    {post.difficulty && <span className="badge badge-gray">{DIFFICULTY_LABELS[post.difficulty]}</span>}
-                    {post.projectType && <span className="badge badge-gray">{PROJECT_TYPE_LABELS[post.projectType]}</span>}
-                    <span className="mypost-date">{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        ) : tab === 'applications' ? (
-          myApps.length === 0 ? (
-            <div className="empty-state">
-              <p>아직 지원한 공고가 없어요.</p>
-              <Link to="/posts" className="btn btn-outline" style={{ marginTop: 16 }}>공고 보러 가기</Link>
-            </div>
-          ) : (
-            <div className="myapp-list">
-              {myApps.map((app) => (
-                <div key={app.id} className="myapp-card card">
-                  <div className="myapp-header">
-                    <span className="badge badge-green">{ROLE_LABELS[app.roleType]}</span>
-                    {app.postClosed && <span className="badge badge-red">마감</span>}
-                    <span className="myapp-date">{new Date(app.createdAt).toLocaleDateString('ko-KR')} 지원</span>
-                  </div>
-                  <Link to={`/posts/${app.postId}`} className="myapp-title">{app.postTitle}</Link>
-                </div>
-              ))}
-            </div>
-          )
+        ) : myPosts.length === 0 ? (
+          <div className="empty-state">
+            <p>아직 올린 공고가 없어요.</p>
+            <Link to="/posts/new" className="btn btn-outline" style={{ marginTop: 16 }}>첫 공고 올리기</Link>
+          </div>
         ) : (
+          <div className="mypost-list">
+            {myPosts.map((post) => (
+              <div key={post.id} className="mypost-card card">
+                <div className="mypost-card-top">
+                  <div className="mypost-badges">
+                    {post.roleTypes.map((r) => <span key={r} className="badge badge-green">{ROLE_LABELS[r]}</span>)}
+                    {post.closed && <span className="badge badge-red">마감</span>}
+                  </div>
+                  <div className="mypost-actions">
+                    {!post.closed && (
+                      <button onClick={() => handleClose(post.id)} className="btn btn-outline btn-sm">마감 처리</button>
+                    )}
+                    <Link to={`/posts/${post.id}/applicants`} className="btn btn-ghost btn-sm">지원자 보기</Link>
+                    <Link to={`/posts/${post.id}/edit`} className="btn btn-ghost btn-sm">수정</Link>
+                    <button onClick={() => handleDelete(post.id)} className="btn btn-danger btn-sm">삭제</button>
+                  </div>
+                </div>
+                <Link to={`/posts/${post.id}`} className="mypost-title">{post.title}</Link>
+                <div className="mypost-meta">
+                  {post.difficulty && <span className="badge badge-gray">{DIFFICULTY_LABELS[post.difficulty]}</span>}
+                  {post.projectType && <span className="badge badge-gray">{PROJECT_TYPE_LABELS[post.projectType]}</span>}
+                  <span className="mypost-date">{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {tab === 'applications' && (loading ? (
+          <div className="spinner" />
+        ) : myApps.length === 0 ? (
+          <div className="empty-state">
+            <p>아직 지원한 공고가 없어요.</p>
+            <Link to="/posts" className="btn btn-outline" style={{ marginTop: 16 }}>공고 보러 가기</Link>
+          </div>
+        ) : (
+          <div className="myapp-list">
+            {myApps.map((app) => (
+              <div key={app.id} className="myapp-card card">
+                <div className="myapp-header">
+                  <span className="badge badge-green">{ROLE_LABELS[app.roleType]}</span>
+                  {app.postClosed && <span className="badge badge-red">마감</span>}
+                  <span className="myapp-date">{new Date(app.createdAt).toLocaleDateString('ko-KR')} 지원</span>
+                </div>
+                <Link to={`/posts/${app.postId}`} className="myapp-title">{app.postTitle}</Link>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {tab === 'profile' && (profileLoading ? (
+          <div className="spinner" />
+        ) : (
+          <div className="settings-section">
+            <div className="settings-card card">
+              <div className="profile-edit-header">
+                <h2 className="settings-title">프로필 편집</h2>
+                {profileData?.isPublic && (
+                  <Link to="/profiles" className="btn btn-ghost btn-sm">내 공개 프로필 보기 →</Link>
+                )}
+              </div>
+
+              <form onSubmit={handleProfileSave} className="profile-edit-form">
+                <div className="form-group">
+                  <label className="form-label">역할 선택 (기술 스택 카테고리)</label>
+                  <div className="profile-role-tabs">
+                    {ALL_ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        className={`profile-role-tab ${profileRole === r ? 'active' : ''}`}
+                        onClick={() => { setProfileRole(r); techStackSelectorRef.current?.open(); }}
+                      >
+                        {ROLE_LABELS[r]}
+                      </button>
+                    ))}
+                  </div>
+                  <TechStackSelector
+                    ref={techStackSelectorRef}
+                    roleType={profileRole}
+                    selected={profileSelectedStacks}
+                    onChange={setProfileSelectedStacks}
+                    placeholder="기술 스택 선택 (여러 개 가능)"
+                    maxHeight={260}
+                  />
+                  {profileSelectedStacks.length > 0 && (
+                    <div className="profile-stack-groups">
+                      {STACK_GROUP_ORDER.map((key) => {
+                        const items = stackGroups[key];
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={key} className="profile-stack-group">
+                            <span className="profile-stack-group-label">{STACK_GROUP_LABELS[key]}</span>
+                            <div className="ts-tags">
+                              {items.map((s) => (
+                                <span key={s} className="ts-tag">
+                                  {s}
+                                  <button
+                                    type="button"
+                                    className="ts-tag-remove"
+                                    onClick={() => setProfileSelectedStacks((prev) => prev.filter((x) => x !== s))}
+                                  >×</button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <p className="form-hint">여러 역할에 걸쳐 기술 스택을 추가할 수 있어요. 탭을 전환해서 각 역할의 기술 스택을 선택하세요.</p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">경력 구분</label>
+                  <select
+                    className="form-input form-select"
+                    value={profileCareerType}
+                    onChange={(e) => setProfileCareerType(e.target.value as CareerType | '')}
+                  >
+                    <option value="">선택 안 함</option>
+                    {(Object.keys(CAREER_TYPE_LABELS) as CareerType[]).map((key) => (
+                      <option key={key} value={key}>{CAREER_TYPE_LABELS[key]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">경력 및 경험</label>
+                  <textarea
+                    className="form-input form-textarea"
+                    placeholder="보유한 경험, 참여 프로젝트, 이력 등을 자유롭게 작성해 주세요."
+                    value={profileExperience}
+                    onChange={(e) => setProfileExperience(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div className="profile-public-row">
+                    <div>
+                      <label className="form-label">프로필 공개</label>
+                      <p className="form-hint">공개하면 다른 회원들이 내 프로필을 볼 수 있어요.</p>
+                    </div>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={profileIsPublic}
+                        onChange={(e) => setProfileIsPublic(e.target.checked)}
+                      />
+                      <span className="toggle-slider" />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    연락 이메일{profileIsPublic && <span className="required-mark"> *</span>}
+                  </label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="공개 프로필에 표시될 연락처 이메일"
+                    value={profileContactEmail}
+                    onChange={(e) => setProfileContactEmail(e.target.value)}
+                    required={profileIsPublic}
+                  />
+                  {profileIsPublic && (
+                    <p className="form-hint warning">공개 프로필에 이 이메일이 노출됩니다.</p>
+                  )}
+                </div>
+
+                {profileError && <p className="settings-error">{profileError}</p>}
+                {profileSuccess && <p className="settings-success">프로필이 저장되었습니다.</p>}
+
+                <button type="submit" className="btn btn-primary" disabled={profileSaving}>
+                  {profileSaving ? '저장 중...' : '저장하기'}
+                </button>
+              </form>
+            </div>
+          </div>
+        ))}
+
+        {tab === 'settings' && (
           <div className="settings-section">
             <div className="settings-card card">
               <h2 className="settings-title">비밀번호 변경</h2>

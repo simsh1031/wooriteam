@@ -1,8 +1,36 @@
 import client from './client';
-import type { ApiResponse, PostCreateRequest, PostDetailResponse, PostSummaryResponse, RoleType } from './types';
+import type { ApiResponse, Difficulty, PostCreateRequest, PostDetailResponse, PostSummaryResponse, ProjectType, RoleType } from './types';
 
-export const getPosts = (role?: RoleType) =>
-  client.get<ApiResponse<PostSummaryResponse[]>>('/api/posts', { params: role ? { role } : {} });
+export interface PostFilterParams {
+  role?: RoleType;
+  difficulty?: Difficulty;
+  projectType?: ProjectType;
+  techStack?: string[];
+  keyword?: string;
+}
+
+export const getPosts = (params: PostFilterParams = {}) => {
+  const query: Record<string, string | string[]> = {};
+  if (params.role) query.role = params.role;
+  if (params.difficulty) query.difficulty = params.difficulty;
+  if (params.projectType) query.projectType = params.projectType;
+  if (params.techStack && params.techStack.length > 0) query.techStack = params.techStack;
+  if (params.keyword) query.keyword = params.keyword;
+  return client.get<ApiResponse<PostSummaryResponse[]>>('/api/posts', {
+    params: query,
+    paramsSerializer: (p) => {
+      const parts: string[] = [];
+      for (const [k, v] of Object.entries(p)) {
+        if (Array.isArray(v)) {
+          v.forEach((item) => parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(item)}`));
+        } else {
+          parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+        }
+      }
+      return parts.join('&');
+    },
+  });
+};
 
 export const getPost = (id: number) =>
   client.get<ApiResponse<PostDetailResponse>>(`/api/posts/${id}`);

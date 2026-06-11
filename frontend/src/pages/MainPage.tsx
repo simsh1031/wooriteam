@@ -1,10 +1,21 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ROLE_LABELS, type RoleType } from '../api/types';
+import { useAuth } from '../context/AuthContext';
 import './MainPage.css';
 
 const ROLES: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
 
 export default function MainPage() {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
+  const [keyword, setKeyword] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (keyword.trim()) navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`);
+  };
+
   return (
     <main className="main-page page">
       <section className="hero container">
@@ -14,9 +25,21 @@ export default function MainPage() {
           원하는 역할 탭에서 공고를 찾고, 바로 지원해 보세요.<br />
           백엔드·프론트엔드·디자인·기획 별로 팀원을 모집할 수 있어요.
         </p>
+
+        <form className="hero-search" onSubmit={handleSearch}>
+          <input
+            type="text"
+            className="hero-search-input"
+            placeholder="프로젝트 제목, 기술 스택, 소개 등으로 검색"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary hero-search-btn">검색</button>
+        </form>
+
         <div className="hero-actions">
           <Link to="/posts" className="btn btn-primary btn-lg">공고 둘러보기</Link>
-          <Link to="/signup" className="btn btn-outline btn-lg">팀원 모집하기</Link>
+          <Link to={isLoggedIn ? '/profiles' : '/login'} className="btn btn-outline btn-lg">팀원 모집하기</Link>
         </div>
       </section>
 

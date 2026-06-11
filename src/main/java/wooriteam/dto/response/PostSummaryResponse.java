@@ -2,6 +2,7 @@ package wooriteam.dto.response;
 
 import lombok.Getter;
 import wooriteam.entity.Post;
+import wooriteam.entity.PostRole;
 import wooriteam.enums.Difficulty;
 import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
@@ -20,6 +21,7 @@ public class PostSummaryResponse {
     private final LocalDateTime createdAt;
     private final String authorNickname;
     private final List<RoleType> roleTypes;
+    private final List<RoleStack> roleStacks;
 
     public PostSummaryResponse(Post post) {
         this.id = post.getId();
@@ -33,5 +35,19 @@ public class PostSummaryResponse {
                 .map(r -> r.getRoleType())
                 .distinct()
                 .collect(Collectors.toList());
+        this.roleStacks = post.getRoles().stream()
+                .map(RoleStack::new)
+                .collect(Collectors.toList());
+    }
+
+    @Getter
+    public static class RoleStack {
+        private final RoleType roleType;
+        private final String techStack;
+
+        public RoleStack(PostRole role) {
+            this.roleType = role.getRoleType();
+            this.techStack = role.getTechStack();
+        }
     }
 }

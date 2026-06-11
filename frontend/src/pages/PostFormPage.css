@@ -1,24 +1,27 @@
-.post-form-title { font-size: 24px; font-weight: 800; color: var(--gray-900); margin-bottom: 24px; letter-spacing: -0.5px; }
+.post-form-title { font-family: var(--font-pixel); font-size: 22px; font-weight: 400; color: var(--gray-900); margin-bottom: 24px; letter-spacing: -0.5px; }
 .post-form { padding: 32px 36px; display: flex; flex-direction: column; gap: 22px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
 .role-toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
 .role-toggle-btn {
-  padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
-  border: 1.5px solid var(--gray-200); color: var(--gray-500); background: var(--white);
+  padding: 8px 18px; border-radius: 0; font-size: 14px; font-weight: 600;
+  border: 1.5px solid var(--gray-300); color: var(--gray-500); background: var(--white);
   transition: all 0.15s;
 }
 .role-toggle-btn:hover { border-color: var(--green-400); color: var(--green-500); }
-.role-toggle-btn.active { background: var(--green-500); color: var(--white); border-color: var(--green-500); }
+.role-toggle-btn.active { background: var(--green-500); color: var(--white); border-color: var(--gray-900); }
 
 .role-detail-form {
-  padding: 20px; background: var(--gray-50); border-radius: var(--radius);
-  border: 1px solid var(--gray-200); display: flex; flex-direction: column; gap: 14px;
+  padding: 20px; background: var(--gray-50); border-radius: 0;
+  border: 1.5px solid var(--gray-300); display: flex; flex-direction: column; gap: 14px;
 }
 .role-detail-form-title {
   font-size: 15px; font-weight: 700; color: var(--gray-700);
   display: flex; align-items: center; gap: 8px;
 }
+
+.form-group-spaced { margin-bottom: 8px; }
+.ts-tags-below { margin-top: 10px; }
 
 .post-form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
 

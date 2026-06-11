@@ -3,10 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getPosts } from '../api/posts';
 import type { Difficulty, PostSummaryResponse, ProjectType, RoleType } from '../api/types';
 import { DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
-import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
 import TechStackSelector from '../components/TechStackSelector';
-import './PostListPage.css';
+import './SearchResultPage.css';
 
 const TABS: { label: string; value: RoleType | 'ALL' }[] = [
   { label: '전체', value: 'ALL' },
@@ -19,14 +18,15 @@ const TABS: { label: string; value: RoleType | 'ALL' }[] = [
 const DIFFICULTIES: Difficulty[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 const PROJECT_TYPES: ProjectType[] = ['SIDE_PROJECT', 'GRADUATION', 'HACKATHON', 'STUDY', 'OTHER'];
 
-export default function PostListPage() {
-  const { isLoggedIn } = useAuth();
+export default function SearchResultPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const keyword = searchParams.get('keyword') ?? '';
   const roleParam = searchParams.get('role') as RoleType | null;
   const activeTab: RoleType | 'ALL' = roleParam ?? 'ALL';
 
   const [posts, setPosts] = useState<PostSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inputVal, setInputVal] = useState(keyword);
 
   const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
@@ -34,13 +34,17 @@ export default function PostListPage() {
 
   const effectiveRole: RoleType = activeTab === 'ALL' ? 'BACKEND' : activeTab;
 
+  useEffect(() => { setInputVal(keyword); }, [keyword]);
+
   useEffect(() => {
     setSelectedTechStacks([]);
   }, [activeTab]);
 
   useEffect(() => {
+    if (!keyword) { setPosts([]); setLoading(false); return; }
     setLoading(true);
     getPosts({
+      keyword,
       role: activeTab === 'ALL' ? undefined : activeTab,
       difficulty: difficulty || undefined,
       projectType: projectType || undefined,
@@ -48,14 +52,24 @@ export default function PostListPage() {
     })
       .then((res) => setPosts(res.data.data))
       .finally(() => setLoading(false));
-  }, [activeTab, difficulty, projectType, selectedTechStacks]);
+  }, [keyword, activeTab, difficulty, projectType, selectedTechStacks]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = inputVal.trim();
+    if (trimmed) {
+      const params: Record<string, string> = { keyword: trimmed };
+      if (activeTab !== 'ALL') params.role = activeTab;
+      setSearchParams(params);
+    }
+  };
 
   const selectTab = (tab: RoleType | 'ALL') => {
-    setDifficulty('');
-    setProjectType('');
     setSelectedTechStacks([]);
-    if (tab === 'ALL') setSearchParams({});
-    else setSearchParams({ role: tab });
+    const params: Record<string, string> = {};
+    if (keyword) params.keyword = keyword;
+    if (tab !== 'ALL') params.role = tab;
+    setSearchParams(params);
   };
 
   const resetFilters = () => {
@@ -67,15 +81,24 @@ export default function PostListPage() {
   const hasFilter = difficulty || projectType || selectedTechStacks.length > 0;
 
   return (
-    <div className="post-list-page page">
+    <div className="search-page page">
       <div className="container">
-        <div className="post-list-header">
-          <div>
-            <h1 className="post-list-title">팀원 모집 공고</h1>
-            <p className="post-list-sub">원하는 역할 탭에서 팀을 찾아보세요</p>
-          </div>
-          {isLoggedIn && (
-            <Link to="/posts/new" className="btn btn-primary">+ 공고 올리기</Link>
+        <div className="search-header">
+          <h1 className="search-title">검색 결과</h1>
+          <form className="search-form" onSubmit={handleSearch}>
+            <input
+              type="text"
+              className="search-input form-input"
+              placeholder="프로젝트 제목, 기술 스택, 소개 등으로 검색"
+              value={inputVal}
+              onChange={(e) => setInputVal(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary">검색</button>
+          </form>
+          {keyword && (
+            <p className="search-keyword-label">
+              <strong>"{keyword}"</strong> 검색 결과 {!loading && <span className="search-count">{posts.length}건</span>}
+            </p>
           )}
         </div>
 
@@ -119,7 +142,7 @@ export default function PostListPage() {
               roleType={effectiveRole}
               selected={selectedTechStacks}
               onChange={setSelectedTechStacks}
-              placeholder={`기술 스택 필터 (${activeTab === 'ALL' ? '전체' : TABS.find(t => t.value === activeTab)?.label})`}
+              placeholder="기술 스택 필터"
             />
           </div>
 
@@ -130,16 +153,16 @@ export default function PostListPage() {
           )}
         </div>
 
-        {loading ? (
+        {!keyword ? (
+          <div className="empty-state">
+            <p>검색어를 입력해 공고를 찾아보세요.</p>
+          </div>
+        ) : loading ? (
           <div className="spinner" />
         ) : posts.length === 0 ? (
           <div className="empty-state">
-            <p>{hasFilter ? '필터 조건에 맞는 공고가 없어요.' : '아직 공고가 없어요.'}</p>
-            {hasFilter ? (
-              <button className="btn btn-outline" style={{ marginTop: 16 }} onClick={resetFilters}>필터 초기화</button>
-            ) : isLoggedIn && (
-              <Link to="/posts/new" className="btn btn-outline" style={{ marginTop: 16 }}>첫 공고 올리기</Link>
-            )}
+            <p>검색 결과가 없어요.</p>
+            <Link to="/posts" className="btn btn-outline" style={{ marginTop: 16 }}>전체 공고 보기</Link>
           </div>
         ) : (
           <div className="post-grid">

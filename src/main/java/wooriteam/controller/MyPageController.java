@@ -7,8 +7,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import wooriteam.common.ApiResponse;
 import wooriteam.dto.request.PasswordChangeRequest;
+import wooriteam.dto.request.UserProfileRequest;
 import wooriteam.dto.response.MyApplicationResponse;
 import wooriteam.dto.response.PostSummaryResponse;
+import wooriteam.dto.response.UserProfileResponse;
 import wooriteam.security.CustomUserDetails;
 import wooriteam.service.MyPageService;
 
@@ -39,5 +41,18 @@ public class MyPageController {
             @Valid @RequestBody PasswordChangeRequest request) {
         myPageService.changePassword(userDetails.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(myPageService.getMyProfile(userDetails.getUserId())));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> updateMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UserProfileRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(myPageService.updateMyProfile(userDetails.getUserId(), request)));
     }
 }

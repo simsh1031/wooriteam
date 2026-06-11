@@ -20,7 +20,11 @@ public enum ErrorCode {
     ROLE_NOT_IN_POST(HttpStatus.BAD_REQUEST, "해당 역할은 이 공고에 속하지 않습니다."),
 
     ALREADY_APPLIED(HttpStatus.CONFLICT, "이미 지원한 역할입니다."),
-    APPLICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "지원자 목록 조회 권한이 없습니다.");
+    APPLICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "지원자 목록 조회 권한이 없습니다."),
+
+    PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "프로필을 찾을 수 없습니다."),
+    PROFILE_NOT_PUBLIC(HttpStatus.FORBIDDEN, "비공개 프로필입니다."),
+    EMAIL_REQUIRED_FOR_PUBLIC(HttpStatus.BAD_REQUEST, "공개 프로필에는 연락 이메일이 필요합니다.");
 
     private final HttpStatus status;
     private final String message;

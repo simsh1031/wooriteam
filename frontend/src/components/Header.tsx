@@ -21,6 +21,7 @@ export default function Header() {
           <Link to="/posts" className="header-link">공고 보기</Link>
           {isLoggedIn ? (
             <>
+              <Link to="/profiles" className="header-link">회원 프로필</Link>
               <Link to="/posts/new" className="btn btn-outline btn-sm">공고 올리기</Link>
               <Link to="/my" className="header-link">{nickname}</Link>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>
