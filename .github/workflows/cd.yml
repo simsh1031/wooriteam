@@ -63,7 +63,7 @@ jobs:
         run: docker build -t ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }} .
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }}
           format: table
