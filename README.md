@@ -6,11 +6,29 @@
 
 ## 목차
 
-1. [실행 방법](#실행-방법)
-2. [기술 스택](#기술-스택)
-3. [프로젝트 구조](#프로젝트-구조)
-4. [구동 원리](#구동-원리)
-5. [API 목록](#api-목록)
+1. [서비스 개요](#서비스-개요)
+2. [실행 방법](#실행-방법)
+3. [기술 스택](#기술-스택)
+4. [프로젝트 구조](#프로젝트-구조)
+5. [구동 원리](#구동-원리)
+6. [클라우드 인프라](#클라우드-인프라)
+7. [CI/CD](#cicd)
+8. [API 목록](#api-목록)
+
+---
+
+## 서비스 개요
+
+역할(백엔드/프론트엔드/디자인/기획)별 **탭**으로 모집공고를 게시·열람하고, 원하는 역할에 지원할 수 있는 팀 프로젝트 구인 플랫폼입니다.
+
+- **역할 탭 분류**: 하나의 공고(`Post`)가 여러 역할(`PostRole`)을 가질 수 있고, 각 역할 탭에 동시 노출됩니다.
+- **모집공고 CRUD + 마감 처리**: 작성자만 수정·삭제·마감 가능. 지원 마감일이 지나거나 마감 처리된 공고는 목록에서 자동 제외됩니다.
+- **역할별 지원**: 비회원도 공고를 열람할 수 있지만, 지원은 회원만 가능합니다. 지원자 목록은 게시자만 조회할 수 있으며, 지원자는 본인 지원서를 수정·철회할 수 있습니다(소프트 삭제).
+- **검색·필터링**: 난이도·기술스택·프로젝트유형 필터와 키워드 검색을 제공합니다.
+- **회원 프로필**: 기술 스택·경력 구분 등을 담은 프로필을 공개해 다른 사용자에게 노출할 수 있습니다(Should).
+- **회원/마이페이지**: 회원가입·로그인·로그아웃·탈퇴, 내가 올린 공고 목록, 내가 지원한 공고 목록을 관리합니다.
+
+상세 기획은 `docs/PLAN.md`, ERD는 `docs/ERD.md`, API 명세는 `docs/api-spec.md`를 참고하세요.
 
 ---
 
@@ -238,6 +256,59 @@ Post (1) ────── (N) PostRole
 | 지원 제출 | ❌ | ✅ | ❌ |
 | 지원자 목록 조회 | ❌ | ❌ | ✅ |
 | 내 공고·지원 목록 | ❌ | ✅ | ✅ |
+
+---
+
+## 클라우드 인프라
+
+AWS 위에 Terraform으로 구성된 운영 환경입니다(설계 상세: `docs/infra.md`, 코드: `infra/`). 프론트엔드(S3 정적 파일)와 백엔드(ECS API)를 **CloudFront 단일 도메인**으로 통합 노출합니다.
+
+```
+사용자
+  │
+  ▼
+CloudFront (OAC)
+  ├── 기본 동작 ─────────────▶ S3 (프론트엔드 정적 파일, wooriteam-frontend-*)
+  └── /api/* ────────────────▶ ALB (X-From-CloudFront 헤더 검사)
+                                  │
+                                  ▼
+                          ECS Fargate Service (wooriteam-cluster / wooriteam-service)
+                          ├── Private Subnet (AZ-a)
+                          └── Private Subnet (AZ-b)
+                                  │
+                                  ▼
+                          RDS MySQL 8.0 Multi-AZ (wooriteam-db)
+```
+
+| 영역 | 구성 |
+|---|---|
+| 진입점 | CloudFront — 정적 자원은 S3, `/api/*`는 ALB로 라우팅 |
+| 프론트엔드 | S3 정적 호스팅 + CloudFront 캐시/무효화 |
+| 백엔드 | ECS Fargate (2 AZ, task family `wooriteam-task`, 컨테이너 `wooriteam-app`) + ALB (헬스체크 `/actuator/health`) |
+| 네트워크 | VPC (Public/Private/DB 서브넷 × 2 AZ), NAT Gateway × 2, `alb-sg → ecs-sg → rds-sg` 단계적 보안그룹 |
+| 데이터베이스 | RDS MySQL 8.0 Multi-AZ, 전용 파라미터 그룹(utf8mb4, slow query log) |
+| 시크릿 관리 | Secrets Manager — DB 자격증명, JWT secret, CloudFront origin secret |
+| 모니터링 | CloudWatch 알람(11종) + 대시보드, SNS → Lambda → Discord 알림 |
+
+ALB는 CloudFront에서 보내는 커스텀 헤더(`X-From-CloudFront`)를 검사하는 리스너 규칙으로 ALB 직접 접근을 차단하여, 모든 API 요청이 CloudFront를 거치도록 강제합니다.
+
+운영 환경은 `application-prod.yaml`(`SPRING_PROFILES_ACTIVE=prod`)을 통해 RDS 접속 정보·HikariCP 커넥션 풀·Graceful Shutdown(30s) 설정을 적용합니다.
+
+---
+
+## CI/CD
+
+GitHub Actions 기반 CI/CD 파이프라인입니다(설계 상세: `docs/cicd.md`, 코드: `.github/workflows/`).
+
+| 워크플로 | 트리거 | 주요 단계 |
+|---|---|---|
+| `ci.yml` | PR 생성/업데이트 | 변경된 경로(`backend`/`frontend`)에 따라 빌드·테스트(백엔드), 빌드·린트(프론트엔드) 수행 |
+| `cd.yml` | `main` 브랜치 push (백엔드 변경) | ① Gradle 빌드·테스트 → ② Docker 이미지 빌드 → ③ Trivy 이미지 스캔 → ④ ECR 푸시 → ⑤ ECS 태스크 정의 갱신 후 롤링 배포(서비스 안정화 대기) → ⑥ `/actuator/health` 스모크 테스트 → ⑦ 실패 시 이전 태스크 정의로 자동 롤백 → ⑧ Discord 알림 |
+| `cd-frontend.yml` | `main` 브랜치 push (`frontend/**` 변경) | ① Vite 빌드 → ② S3 동기화(`--delete`) → ③ CloudFront 캐시 무효화 → ④ Discord 알림 |
+
+배포에 필요한 자격 정보·리소스 식별자(ECR/ECS/ALB/S3/CloudFront 등)는 모두 GitHub Secrets로 관리합니다.
+
+ECS 무중단 배포를 위해 ALB Deregistration Delay(30s)와 애플리케이션의 Graceful Shutdown(30s)을 맞춰두었으며, 배포 직후 스모크 테스트가 실패하면 이전 태스크 정의로 즉시 롤백됩니다.
 
 ---
 
