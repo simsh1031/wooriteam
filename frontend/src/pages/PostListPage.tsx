@@ -6,6 +6,7 @@ import { DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
 import TechStackSelector from '../components/TechStackSelector';
+import SelectDropdown from '../components/SelectDropdown';
 import './PostListPage.css';
 
 const TABS: { label: string; value: RoleType | 'ALL' }[] = [
@@ -92,27 +93,23 @@ export default function PostListPage() {
         </div>
 
         <div className="filter-bar">
-          <select
-            className="filter-select"
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value as Difficulty | '')}
-          >
-            <option value="">난이도 전체</option>
-            {DIFFICULTIES.map((d) => (
-              <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>
-            ))}
-          </select>
+          <div className="filter-dropdown">
+            <SelectDropdown
+              options={DIFFICULTIES.map((d) => ({ value: d, label: DIFFICULTY_LABELS[d] }))}
+              value={difficulty}
+              onChange={(v) => setDifficulty(v as Difficulty | '')}
+              placeholder="난이도 전체"
+            />
+          </div>
 
-          <select
-            className="filter-select"
-            value={projectType}
-            onChange={(e) => setProjectType(e.target.value as ProjectType | '')}
-          >
-            <option value="">모집 유형 전체</option>
-            {PROJECT_TYPES.map((pt) => (
-              <option key={pt} value={pt}>{PROJECT_TYPE_LABELS[pt]}</option>
-            ))}
-          </select>
+          <div className="filter-dropdown">
+            <SelectDropdown
+              options={PROJECT_TYPES.map((pt) => ({ value: pt, label: PROJECT_TYPE_LABELS[pt] }))}
+              value={projectType}
+              onChange={(v) => setProjectType(v as ProjectType | '')}
+              placeholder="모집 유형 전체"
+            />
+          </div>
 
           <div className="filter-tech">
             <TechStackSelector

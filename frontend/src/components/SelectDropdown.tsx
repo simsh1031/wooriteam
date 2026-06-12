@@ -12,9 +12,10 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  allLabel?: string;
 }
 
-export default function SelectDropdown({ options, value, onChange, placeholder = '선택 안함' }: Props) {
+export default function SelectDropdown({ options, value, onChange, placeholder = '선택 안함', allLabel }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -46,7 +47,7 @@ export default function SelectDropdown({ options, value, onChange, placeholder =
         <div className="ts-dropdown">
           <div className="ts-options">
             <div className={`ts-option ${value === '' ? 'ts-option-active' : ''}`} onClick={() => select('')}>
-              <span>선택 안함</span>
+              <span>{allLabel ?? placeholder}</span>
             </div>
             {options.map((opt) => (
               <div
