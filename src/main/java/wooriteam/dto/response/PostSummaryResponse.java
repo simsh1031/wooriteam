@@ -7,6 +7,7 @@ import wooriteam.enums.Difficulty;
 import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +19,9 @@ public class PostSummaryResponse {
     private final Difficulty difficulty;
     private final ProjectType projectType;
     private final boolean closed;
+    private final LocalDate applicationDeadline;
+    private final LocalDate projectStartDate;
+    private final LocalDate projectEndDate;
     private final LocalDateTime createdAt;
     private final String authorNickname;
     private final List<RoleType> roleTypes;
@@ -29,6 +33,9 @@ public class PostSummaryResponse {
         this.difficulty = post.getDifficulty();
         this.projectType = post.getProjectType();
         this.closed = post.isClosed();
+        this.applicationDeadline = post.getApplicationDeadline();
+        this.projectStartDate = post.getProjectStartDate();
+        this.projectEndDate = post.getProjectEndDate();
         this.createdAt = post.getCreatedAt();
         this.authorNickname = post.getUser().getNickname();
         this.roleTypes = post.getRoles().stream()

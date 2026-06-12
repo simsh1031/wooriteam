@@ -8,6 +8,7 @@ import wooriteam.enums.Difficulty;
 import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,10 @@ public class PostSpecification {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(cb.isFalse(root.get("closed")));
+            predicates.add(cb.or(
+                    cb.isNull(root.get("applicationDeadline")),
+                    cb.greaterThanOrEqualTo(root.get("applicationDeadline"), LocalDate.now())
+            ));
 
             Join<Post, PostRole> roleJoin = root.join("roles", JoinType.INNER);
 

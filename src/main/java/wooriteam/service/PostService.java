@@ -39,6 +39,9 @@ public class PostService {
                 .description(request.getDescription())
                 .difficulty(request.getDifficulty())
                 .projectType(request.getProjectType())
+                .applicationDeadline(request.getApplicationDeadline())
+                .projectStartDate(request.getProjectStartDate())
+                .projectEndDate(request.getProjectEndDate())
                 .build();
         request.getRoles().forEach(roleReq -> {
             PostRole role = PostRole.builder()
@@ -70,7 +73,8 @@ public class PostService {
 
     public PostDetailResponse updatePost(Long postId, PostUpdateRequest request, Long userId) {
         Post post = getPostOwnedBy(postId, userId);
-        post.update(request.getTitle(), request.getDescription(), request.getDifficulty(), request.getProjectType());
+        post.update(request.getTitle(), request.getDescription(), request.getDifficulty(), request.getProjectType(),
+                request.getApplicationDeadline(), request.getProjectStartDate(), request.getProjectEndDate());
         post.getRoles().clear();
         request.getRoles().forEach(roleReq -> {
             PostRole role = PostRole.builder()

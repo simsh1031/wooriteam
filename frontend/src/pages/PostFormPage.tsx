@@ -4,6 +4,8 @@ import { createPost, getPost, updatePost } from '../api/posts';
 import type { Difficulty, PostRoleRequest, ProjectType, RoleType } from '../api/types';
 import { ROLE_LABELS } from '../api/types';
 import TechStackSelector from '../components/TechStackSelector';
+import SelectDropdown from '../components/SelectDropdown';
+import DateInput from '../components/DateInput';
 import './PostFormPage.css';
 
 const ROLE_OPTIONS: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
@@ -31,6 +33,9 @@ export default function PostFormPage() {
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
+  const [applicationDeadline, setApplicationDeadline] = useState('');
+  const [projectStartDate, setProjectStartDate] = useState('');
+  const [projectEndDate, setProjectEndDate] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<RoleType[]>([]);
   const [roleDetails, setRoleDetails] = useState<Record<RoleType, PostRoleRequest>>({} as any);
   const [roleTechStacks, setRoleTechStacks] = useState<Record<RoleType, string[]>>({} as any);
@@ -45,6 +50,9 @@ export default function PostFormPage() {
       setDescription(p.description ?? '');
       setDifficulty(p.difficulty ?? '');
       setProjectType(p.projectType ?? '');
+      setApplicationDeadline(p.applicationDeadline ?? '');
+      setProjectStartDate(p.projectStartDate ?? '');
+      setProjectEndDate(p.projectEndDate ?? '');
       const roles = p.roles.map((r) => r.roleType);
       setSelectedRoles(roles);
       const details: Record<string, PostRoleRequest> = {};
@@ -88,6 +96,9 @@ export default function PostFormPage() {
       title, description,
       difficulty: difficulty || ('' as any),
       projectType: projectType || ('' as any),
+      applicationDeadline: applicationDeadline || '',
+      projectStartDate: projectStartDate || '',
+      projectEndDate: projectEndDate || '',
       roles: selectedRoles.map((r) => roleDetails[r] ?? emptyRole(r)),
     };
     try {
@@ -118,20 +129,45 @@ export default function PostFormPage() {
             />
           </div>
 
+          <div className="form-group">
+            <label className="form-label">지원 마감일</label>
+            <DateInput
+              className="form-input"
+              value={applicationDeadline} onChange={setApplicationDeadline}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">프로젝트 기한</label>
+            <div className="form-row">
+              <DateInput
+                className="form-input"
+                value={projectStartDate} onChange={setProjectStartDate}
+              />
+              <DateInput
+                className="form-input"
+                value={projectEndDate} onChange={setProjectEndDate}
+                min={projectStartDate || undefined}
+              />
+            </div>
+          </div>
+
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">난이도</label>
-              <select className="form-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty | '')}>
-                <option value="">선택 안함</option>
-                {DIFFICULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <SelectDropdown
+                options={DIFFICULTY_OPTIONS}
+                value={difficulty}
+                onChange={(v) => setDifficulty(v as Difficulty | '')}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">프로젝트 유형</label>
-              <select className="form-select" value={projectType} onChange={(e) => setProjectType(e.target.value as ProjectType | '')}>
-                <option value="">선택 안함</option>
-                {PROJECT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <SelectDropdown
+                options={PROJECT_TYPE_OPTIONS}
+                value={projectType}
+                onChange={(v) => setProjectType(v as ProjectType | '')}
+              />
             </div>
           </div>
 

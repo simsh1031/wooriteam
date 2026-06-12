@@ -22,9 +22,23 @@ export default function PostCard({ post, activeRole }: Props) {
             <span key={r} className="badge badge-green">{ROLE_LABELS[r]}</span>
           ))}
         </div>
-        {post.closed && <span className="badge badge-red">마감</span>}
+        <div className="post-card-top-right">
+          {post.applicationDeadline && (
+            <span className="post-card-apply-deadline">
+              지원 마감: {new Date(post.applicationDeadline).toLocaleDateString('ko-KR')}
+            </span>
+          )}
+          {post.closed && <span className="badge badge-red">마감</span>}
+        </div>
       </div>
       <h3 className="post-card-title">{post.title}</h3>
+      {(post.projectStartDate || post.projectEndDate) && (
+        <p className="post-card-deadline">
+          프로젝트 기한: {post.projectStartDate ? new Date(post.projectStartDate).toLocaleDateString('ko-KR') : ''}
+          {' ~ '}
+          {post.projectEndDate ? new Date(post.projectEndDate).toLocaleDateString('ko-KR') : ''}
+        </p>
+      )}
       <div className="post-card-meta">
         {post.difficulty && (
           <span className="badge badge-yellow">{DIFFICULTY_LABELS[post.difficulty]}</span>
