@@ -81,6 +81,21 @@ export default function PostDetailPage() {
           </div>
 
           <h1 className="post-detail-title">{post.title}</h1>
+          {(post.applicationDeadline || post.projectStartDate || post.projectEndDate) && (
+            <p className="post-detail-deadline">
+              {post.applicationDeadline && (
+                <>지원 마감일: {new Date(post.applicationDeadline).toLocaleDateString('ko-KR')}</>
+              )}
+              {post.applicationDeadline && (post.projectStartDate || post.projectEndDate) && ' · '}
+              {(post.projectStartDate || post.projectEndDate) && (
+                <>
+                  프로젝트 기한: {post.projectStartDate ? new Date(post.projectStartDate).toLocaleDateString('ko-KR') : ''}
+                  {' ~ '}
+                  {post.projectEndDate ? new Date(post.projectEndDate).toLocaleDateString('ko-KR') : ''}
+                </>
+              )}
+            </p>
+          )}
 
           <div className="post-detail-meta">
             <span className="meta-item">작성자: <strong>{post.authorNickname}</strong></span>

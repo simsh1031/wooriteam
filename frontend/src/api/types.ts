@@ -59,6 +59,9 @@ export interface PostDetailResponse {
   difficulty: Difficulty | null;
   projectType: ProjectType | null;
   closed: boolean;
+  applicationDeadline: string | null;
+  projectStartDate: string | null;
+  projectEndDate: string | null;
   createdAt: string;
   authorId: number;
   authorNickname: string;
@@ -76,6 +79,9 @@ export interface PostSummaryResponse {
   difficulty: Difficulty | null;
   projectType: ProjectType | null;
   closed: boolean;
+  applicationDeadline: string | null;
+  projectStartDate: string | null;
+  projectEndDate: string | null;
   createdAt: string;
   authorNickname: string;
   roleTypes: RoleType[];
@@ -115,6 +121,9 @@ export interface PostCreateRequest {
   description: string;
   difficulty: Difficulty | '';
   projectType: ProjectType | '';
+  applicationDeadline: string | '';
+  projectStartDate: string | '';
+  projectEndDate: string | '';
   roles: PostRoleRequest[];
 }
 
