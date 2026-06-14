@@ -2,7 +2,7 @@ name: CD - Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [develop] #[main]
     paths:
       - 'frontend/**'
       - '.github/workflows/cd-frontend.yml'
