@@ -183,3 +183,48 @@ User 가입
     → Application 제출 (지원동기, 기술스택, 연락처)
       → 게시자(Post.user_id)만 지원자 목록 조회 가능
 ```
+
+---
+
+## 0615 수정본 — 구현 반영 변경 사항
+
+> 6/5~6/12 작업으로 실제 구현(엔티티)이 위 원본 ERD에서 변경/추가됨. 원본은 기록으로 남기고, 변경분만 정리.
+
+### Post
+
+| 컬럼 | 변경 |
+|---|---|
+| `deadline` (DATE) | → `application_deadline` (DATE)로 이름 변경. "자동 마감 처리"는 미구현이며, 현재는 `GET /api/posts` 목록 조회 시 마감일이 지난 공고를 제외하는 용도로만 사용 |
+| `project_start_date` (DATE) | 신규 추가. 프로젝트 시작일 |
+| `project_end_date` (DATE) | 신규 추가. 프로젝트 종료일 |
+
+### UserProfile (Should — 구현 완료)
+
+| 컬럼 | 변경 |
+|---|---|
+| `career_type` (ENUM) | 신규 추가. 값: `NON_MAJOR_STUDENT`, `MAJOR_STUDENT`, `BOOTCAMP`, `JOB_SEEKER`, `JUNIOR`, `SENIOR`, `OTHER` |
+| `contact_email` (VARCHAR) | 신규 추가. 공개 프로필에 노출되는 연락용 이메일. `is_public = true`로 설정하려면 필수 |
+
+### Application
+
+| 컬럼 | 변경 |
+|---|---|
+| `withdrawn` (BOOLEAN, default false) | 신규 추가. 지원 철회 시 레코드를 삭제하지 않고 `true`로 표시하는 소프트 삭제 — 재지원 시 기존 내용 복원 가능 |
+
+### ENUM 변경
+
+| 엔티티 | 컬럼 | 변경 전 | 변경 후 |
+|---|---|---|---|
+| Post | project_type | `SIDE_PROJECT`, `HACKATHON`, `GRADUATION`, `BOOTCAMP` | `SIDE_PROJECT`, `GRADUATION`, `HACKATHON`, `STUDY`, `OTHER` |
+
+### 신규 ENUM
+
+| 엔티티 | 컬럼 | 값 |
+|---|---|---|
+| UserProfile | career_type | `NON_MAJOR_STUDENT`, `MAJOR_STUDENT`, `BOOTCAMP`, `JOB_SEEKER`, `JUNIOR`, `SENIOR`, `OTHER` |
+
+### 비고 갱신
+
+- `UserProfile`은 더 이상 "Should 미구현"이 아니라 구현 완료 상태 (`docs/api-spec.md` 4-4/4-5, 5-1/5-2 참고)
+- `Post.deadline`은 "설정 시 자동 마감 처리(Could)"가 아니라 현재는 목록 제외 필터로만 동작. `closed` 자동 전환 스케줄러는 여전히 미구현(Could)
+- `Group`, `GroupMember`, `Bookmark`, `Report`는 원본 ERD 그대로 미구현(Could) 상태 유지

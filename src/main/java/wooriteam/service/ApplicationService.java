@@ -28,6 +28,7 @@ public class ApplicationService {
     private final PostRepository postRepository;
     private final PostRoleRepository postRoleRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public ApplicationResponse apply(Long postId, ApplicationRequest request, Long userId) {
         Post post = postRepository.findById(postId)
@@ -46,6 +47,7 @@ public class ApplicationService {
                 throw new CustomException(ErrorCode.ALREADY_APPLIED);
             }
             application.update(role, request.getMotivation(), request.getTechStack(), request.getExperience(), request.getContact());
+            emailService.sendNewApplicationEmail(post, application);
             return new ApplicationResponse(application);
         }
 
@@ -58,7 +60,9 @@ public class ApplicationService {
                 .experience(request.getExperience())
                 .contact(request.getContact())
                 .build();
-        return new ApplicationResponse(applicationRepository.save(application));
+        application = applicationRepository.save(application);
+        emailService.sendNewApplicationEmail(post, application);
+        return new ApplicationResponse(application);
     }
 
     @Transactional(readOnly = true)

@@ -274,3 +274,7 @@ aws cloudfront create-invalidation
 | Trivy 이미지 스캔 | 보안 | `cd.yml` |
 | JaCoCo 커버리지 게이트 | 코드 품질 | `build.gradle` + `ci.yml` |
 | S3 sync + CloudFront 무효화 | 프론트엔드 배포 자동화 | `cd-frontend.yml` |
+
+---
+
+> terraform apply 이후 운영 절차(GitHub Secrets 갱신 등)는 [`docs/deploy.md`](./deploy.md) 참고.
