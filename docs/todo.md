@@ -149,6 +149,17 @@
 - [ ] `infra/cloudwatch.tf` — 로그 그룹, 알람 11개, SNS, Dashboard
 - [ ] `infra/lambda.tf` — alert-notifier Lambda + SNS 구독
 
+**8단계 — Grafana Cloud 연동 (모니터링, Should)**
+
+> 상세 절차: `docs/infra.md` "11-3. Grafana Cloud 연동" 참고
+
+- [ ] `terraform apply`로 `wooriteam-grafana` IAM User(`infra/iam.tf`) 생성
+- [ ] Grafana Cloud 무료 계정 생성 + 스택(`wooriteam`) 생성
+- [ ] `wooriteam-grafana` IAM User의 Access Key 발급
+- [ ] Grafana Cloud > Connections > AWS > CloudWatch 데이터소스 연결 (Access Key, `ap-northeast-2`)
+- [ ] 대시보드 import (ECS `23`, RDS `707`, ALB `650`, CloudWatch Logs `13639`)
+- [ ] (선택) Discord Contact point 등록 + Alert rule 설정 (ECS CPU>80%, ALB 5xx>10건/분, RDS 커넥션>60개)
+
 ---
 
 ### CI/CD
