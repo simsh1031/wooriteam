@@ -29,3 +29,6 @@ export const getMyPosts = () =>
 
 export const getMyApplications = () =>
   client.get<ApiResponse<MyApplicationResponse[]>>('/api/my/applications');
+
+export const getMyBookmarks = () =>
+  client.get<ApiResponse<import('./types').PostSummaryResponse[]>>('/api/my/bookmarks');

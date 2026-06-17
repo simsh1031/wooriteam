@@ -68,6 +68,7 @@ input, textarea, select { font-family: var(--font); outline: none; }
 .btn-outline:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--green-200); }
 .btn-ghost { background: transparent; color: var(--gray-500); }
 .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+.btn-bordered { border-color: var(--gray-900); }
 .btn-danger { background: var(--white); color: var(--danger); border-color: var(--gray-900); box-shadow: 3px 3px 0 var(--danger-bg); }
 .btn-danger:hover { background: var(--danger-bg); }
 .btn-danger:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--danger-bg); }

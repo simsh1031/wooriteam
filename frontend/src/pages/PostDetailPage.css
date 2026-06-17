@@ -49,6 +49,21 @@
 .apply-cta-msg { font-size: 14px; color: var(--gray-500); }
 .apply-cta-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
+
+.bookmark-btn {
+  border: 1.5px solid var(--gray-300);
+  color: var(--gray-500);
+  background: var(--white);
+  transition: all 0.15s;
+}
+.bookmark-btn:hover { border-color: var(--green-400); color: var(--green-500); }
+.bookmark-btn.bookmarked {
+  border-color: var(--green-500);
+  color: var(--green-600);
+  background: var(--green-50);
+  font-weight: 700;
+}
+
 @media (max-width: 768px) {
   .post-detail-card { padding: 24px 20px; }
   .post-detail-head { flex-direction: column; }

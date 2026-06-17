@@ -46,3 +46,9 @@ export const deletePost = (id: number) =>
 
 export const closePost = (id: number) =>
   client.patch<ApiResponse<null>>(`/api/posts/${id}/close`);
+
+export const addBookmark = (id: number) =>
+  client.post<ApiResponse<null>>(`/api/posts/${id}/bookmark`);
+
+export const removeBookmark = (id: number) =>
+  client.delete<ApiResponse<null>>(`/api/posts/${id}/bookmark`);

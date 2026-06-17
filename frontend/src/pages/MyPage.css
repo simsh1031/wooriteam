@@ -31,6 +31,10 @@
 .myapp-title { font-size: 16px; font-weight: 700; color: var(--gray-900); transition: color 0.15s; }
 .myapp-title:hover { color: var(--green-500); }
 
+.mybookmark-list { display: flex; flex-direction: column; gap: 12px; }
+.mybookmark-card { padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+.mybookmark-header { display: flex; align-items: center; gap: 8px; }
+
 .settings-section { display: flex; flex-direction: column; gap: 16px; }
 .settings-card { padding: 28px 24px; }
 .settings-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 20px; }
