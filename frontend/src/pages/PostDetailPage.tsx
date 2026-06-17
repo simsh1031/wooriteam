@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getPost, deletePost, closePost } from '../api/posts';
-import { getMyApplicationForPost, withdrawMyApplication } from '../api/applications';
+import { getPost, deletePost, closePost, addBookmark, removeBookmark } from '../api/posts';
+import { getMyApplicationForPost, withdrawMyApplication, getMyBookmarks } from '../api/applications';
 import type { PostDetailResponse, ApplicationResponse } from '../api/types';
 import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,8 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<PostDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [myApplication, setMyApplication] = useState<ApplicationResponse | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     getPost(postId)
@@ -28,6 +30,9 @@ export default function PostDetailPage() {
     getMyApplicationForPost(postId)
       .then((res) => setMyApplication(res.data.data))
       .catch((err) => console.error('내 지원 정보 조회 실패:', err));
+    getMyBookmarks()
+      .then((res) => setBookmarked(res.data.data.some((p) => p.id === postId)))
+      .catch(() => {});
   }, [postId, isLoggedIn]);
 
   const isAuthor = post && userId !== null && post.authorId === userId;
@@ -50,6 +55,24 @@ export default function PostDetailPage() {
     navigate('/posts');
   };
 
+  const handleBookmark = async () => {
+    if (bookmarkLoading) return;
+    setBookmarkLoading(true);
+    try {
+      if (bookmarked) {
+        await removeBookmark(postId);
+        setBookmarked(false);
+      } else {
+        await addBookmark(postId);
+        setBookmarked(true);
+      }
+    } catch {
+      // 상태 유지
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
   if (loading) return <div className="page"><div className="spinner" /></div>;
   if (!post) return <div className="page container"><p>공고를 찾을 수 없습니다.</p></div>;
 
@@ -68,16 +91,23 @@ export default function PostDetailPage() {
               ))}
               {post.closed && <span className="badge badge-red">마감</span>}
             </div>
-            {isAuthor && (
-              <div className="post-detail-actions">
-                {!post.closed && (
-                  <button onClick={handleClose} className="btn btn-outline btn-sm">마감 처리</button>
-                )}
-                <Link to={`/posts/${postId}/edit`} className="btn btn-ghost btn-sm">수정</Link>
-                <button onClick={handleDelete} className="btn btn-danger btn-sm">삭제</button>
-                <Link to={`/posts/${postId}/applicants`} className="btn btn-primary btn-sm">지원자 보기</Link>
-              </div>
-            )}
+            <div className="post-detail-actions">
+              {isLoggedIn && !isAuthor && (
+                <button
+                  onClick={handleBookmark}
+                  disabled={bookmarkLoading}
+                  className={`btn btn-sm bookmark-btn ${bookmarked ? 'bookmarked' : ''}`}
+                >
+                  {bookmarked ? '★ 북마크됨' : '☆ 북마크'}
+                </button>
+              )}
+              {isAuthor && (
+                <>
+                  <Link to={`/posts/${postId}/edit`} className="btn btn-ghost btn-bordered btn-sm">수정</Link>
+                  <button onClick={handleDelete} className="btn btn-danger btn-sm">삭제</button>
+                </>
+              )}
+            </div>
           </div>
 
           <h1 className="post-detail-title">{post.title}</h1>
@@ -137,6 +167,16 @@ export default function PostDetailPage() {
           </div>
         </div>
 
+        {isAuthor && (
+          <div className="apply-cta">
+            <div className="apply-cta-actions">
+              {!post.closed && (
+                <button onClick={handleClose} className="btn btn-outline btn-lg">마감 처리</button>
+              )}
+              <Link to={`/posts/${postId}/applicants`} className="btn btn-primary btn-lg">지원자 보기</Link>
+            </div>
+          </div>
+        )}
         {!post.closed && isLoggedIn && !isAuthor && (
           <div className="apply-cta">
             {myApplication && !myApplication.withdrawn ? (

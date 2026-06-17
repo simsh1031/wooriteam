@@ -14,6 +14,7 @@ import wooriteam.enums.Difficulty;
 import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 import wooriteam.security.CustomUserDetails;
+import wooriteam.service.BookmarkService;
 import wooriteam.service.PostService;
 
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final BookmarkService bookmarkService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getPosts(
@@ -68,6 +70,22 @@ public class PostController {
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         postService.closePost(postId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @PostMapping("/{postId}/bookmark")
+    public ResponseEntity<ApiResponse<Void>> addBookmark(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookmarkService.addBookmark(postId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @DeleteMapping("/{postId}/bookmark")
+    public ResponseEntity<ApiResponse<Void>> removeBookmark(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookmarkService.removeBookmark(postId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

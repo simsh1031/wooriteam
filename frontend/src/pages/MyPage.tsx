@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getMyPosts, getMyApplications } from '../api/applications';
+import { getMyPosts, getMyApplications, getMyBookmarks } from '../api/applications';
 import { closePost, deletePost } from '../api/posts';
 import { changePassword, withdraw } from '../api/auth';
 import { getMyProfile, updateMyProfile } from '../api/profiles';
@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import TechStackSelector, { type TechStackSelectorHandle } from '../components/TechStackSelector';
 import './MyPage.css';
 
-type Tab = 'posts' | 'applications' | 'profile' | 'settings';
+type Tab = 'posts' | 'applications' | 'bookmarks' | 'profile' | 'settings';
 
 const ALL_ROLES: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
 
@@ -35,6 +35,9 @@ export default function MyPage() {
 
   const [myPosts, setMyPosts] = useState<PostSummaryResponse[]>([]);
   const [myApps, setMyApps] = useState<MyApplicationResponse[]>([]);
+  const [myBookmarks, setMyBookmarks] = useState<PostSummaryResponse[]>([]);
+  const [bookmarksLoaded, setBookmarksLoaded] = useState(false);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
@@ -65,6 +68,15 @@ export default function MyPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (tab === 'bookmarks' && !bookmarksLoaded) {
+      setBookmarksLoading(true);
+      getMyBookmarks()
+        .then((res) => { setMyBookmarks(res.data.data); setBookmarksLoaded(true); })
+        .finally(() => setBookmarksLoading(false));
+    }
+  }, [tab, bookmarksLoaded]);
 
   useEffect(() => {
     if (tab === 'profile' && !profileLoaded) {
@@ -178,6 +190,9 @@ export default function MyPage() {
           <button className={`mypage-tab ${tab === 'applications' ? 'active' : ''}`} onClick={() => setTab('applications')}>
             내가 지원한 공고 <span className="tab-count">{myApps.length}</span>
           </button>
+          <button className={`mypage-tab ${tab === 'bookmarks' ? 'active' : ''}`} onClick={() => setTab('bookmarks')}>
+            북마크 {bookmarksLoaded && <span className="tab-count">{myBookmarks.length}</span>}
+          </button>
           <button className={`mypage-tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>
             프로필 편집
           </button>
@@ -206,9 +221,7 @@ export default function MyPage() {
                     {!post.closed && (
                       <button onClick={() => handleClose(post.id)} className="btn btn-outline btn-sm">마감 처리</button>
                     )}
-                    <Link to={`/posts/${post.id}/applicants`} className="btn btn-ghost btn-sm">지원자 보기</Link>
-                    <Link to={`/posts/${post.id}/edit`} className="btn btn-ghost btn-sm">수정</Link>
-                    <button onClick={() => handleDelete(post.id)} className="btn btn-danger btn-sm">삭제</button>
+                    <Link to={`/posts/${post.id}/applicants`} className="btn btn-ghost btn-bordered btn-sm">지원자 보기</Link>
                   </div>
                 </div>
                 <Link to={`/posts/${post.id}`} className="mypost-title">{post.title}</Link>
@@ -239,6 +252,39 @@ export default function MyPage() {
                   <span className="myapp-date">{new Date(app.createdAt).toLocaleDateString('ko-KR')} 지원</span>
                 </div>
                 <Link to={`/posts/${app.postId}/apply`} className="myapp-title">{app.postTitle}</Link>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {tab === 'bookmarks' && (bookmarksLoading ? (
+          <div className="spinner" />
+        ) : myBookmarks.length === 0 ? (
+          <div className="empty-state">
+            <p>아직 북마크한 공고가 없어요.</p>
+            <Link to="/posts" className="btn btn-outline" style={{ marginTop: 16 }}>공고 보러 가기</Link>
+          </div>
+        ) : (
+          <div className="mybookmark-list">
+            {myBookmarks.map((post) => (
+              <div key={post.id} className="mybookmark-card card">
+                <div className="mybookmark-header">
+                  <div className="mypost-badges">
+                    {post.roleTypes.map((r) => <span key={r} className="badge badge-green">{ROLE_LABELS[r]}</span>)}
+                    {post.closed && <span className="badge badge-red">마감</span>}
+                  </div>
+                  <span className="myapp-date">
+                    {post.applicationDeadline
+                      ? `마감일: ${new Date(post.applicationDeadline).toLocaleDateString('ko-KR')}`
+                      : new Date(post.createdAt).toLocaleDateString('ko-KR')}
+                  </span>
+                </div>
+                <Link to={`/posts/${post.id}`} className="mypost-title">{post.title}</Link>
+                <div className="mypost-meta">
+                  {post.difficulty && <span className="badge badge-gray">{DIFFICULTY_LABELS[post.difficulty]}</span>}
+                  {post.projectType && <span className="badge badge-gray">{PROJECT_TYPE_LABELS[post.projectType]}</span>}
+                  <span className="mypost-date">{post.authorNickname}</span>
+                </div>
               </div>
             ))}
           </div>
