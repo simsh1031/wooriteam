@@ -116,6 +116,12 @@ export interface PostRoleRequest {
   techStack: string;
 }
 
+export interface ReportRequest {
+  postId: number;
+  title: string;
+  content: string;
+}
+
 export interface PostCreateRequest {
   title: string;
   description: string;

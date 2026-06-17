@@ -13,6 +13,7 @@ import MyPage from './pages/MyPage';
 import SearchResultPage from './pages/SearchResultPage';
 import ProfilesPage from './pages/ProfilesPage';
 import ProfileDetailPage from './pages/ProfileDetailPage';
+import ReportPage from './pages/ReportPage';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/search" element={<SearchResultPage />} />
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/profiles/:userId" element={<ProfileDetailPage />} />
+          <Route path="/report" element={<ReportPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

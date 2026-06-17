@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import wooriteam.entity.Application;
 import wooriteam.entity.Post;
+import wooriteam.entity.Report;
 import wooriteam.entity.User;
 
 @Slf4j
@@ -23,6 +24,9 @@ public class EmailService {
 
     @Value("${app.mail.from:}")
     private String from;
+
+    @Value("${app.mail.admin:${app.mail.from:}}")
+    private String adminEmail;
 
     @Async
     public void sendNewApplicationEmail(Post post, Application application) {
@@ -49,6 +53,34 @@ public class EmailService {
             mailSender.send(message);
         } catch (Exception e) {
             log.warn("지원 알림 메일 발송 실패 (postId={}, to={})", post.getId(), owner.getEmail(), e);
+        }
+    }
+
+    @Async
+    public void sendReportEmail(Report report) {
+        if (!mailEnabled) {
+            return;
+        }
+        if (adminEmail == null || adminEmail.isBlank()) {
+            return;
+        }
+
+        Post post = report.getPost();
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(from);
+        message.setTo(adminEmail);
+        message.setSubject("[우리팀] 신고가 접수되었습니다 - " + report.getTitle());
+        message.setText(
+                "새로운 신고가 접수되었습니다.\n\n"
+                        + "- 신고 제목: " + report.getTitle() + "\n"
+                        + "- 신고 대상 공고: " + post.getTitle() + " (postId=" + post.getId() + ")\n"
+                        + "- 신고 내용:\n" + report.getContent()
+        );
+
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.warn("신고 알림 메일 발송 실패 (reportId={})", report.getId(), e);
         }
     }
 }
