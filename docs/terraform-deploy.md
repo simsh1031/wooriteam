@@ -36,6 +36,40 @@ terraform apply     # 실제 생성 (yes 입력)
 
 ---
 
+## 1-1. 목업 데이터 삽입 (선택)
+
+`terraform apply` 후 테스트용 초기 데이터를 RDS에 넣고 싶을 때 실행한다.
+
+> **실행 타이밍**: ECS 서비스가 기동되어 Spring Boot가 `ddl-auto: update`로 테이블을 생성한 **이후** 실행해야 한다. 테이블이 없으면 삽입 실패.
+
+```bash
+# 프로젝트 루트에서 실행
+bash scripts/seed-rds.sh
+```
+
+스크립트가 자동으로 처리하는 것들:
+
+| 단계 | 내용 |
+|---|---|
+| Terraform output | RDS 엔드포인트·클러스터·S3 버킷 조회 |
+| Secrets Manager | DB 자격증명 조회 (`wooriteam/prod/db-*`) |
+| S3 임시 업로드 | `docs/mock-data.sql` → S3, 사전 서명 URL(1시간) 발급 |
+| Fargate 태스크 | `alpine:3.19` 이미지로 VPC 내부에서 mysql-client 실행 |
+| 자동 정리 | 완료 후 임시 태스크 정의·S3 파일 삭제 |
+
+> **왜 Fargate 태스크인가**: RDS가 `publicly_accessible = false`이고 DB 서브넷은 인터넷 라우팅이 없어 로컬에서 직접 접속할 수 없다. ECS SG → RDS SG 경로(3306)를 통해 VPC 내부에서만 접근 가능하므로, 동일 SG를 쓰는 일회용 Fargate 태스크로 우회한다.
+
+실패 시 CloudWatch 로그 확인:
+
+```bash
+# 로그 그룹: /ecs/wooriteam  스트림 prefix: db-seed
+aws logs tail /ecs/wooriteam --log-stream-name-prefix db-seed --region ap-northeast-2
+```
+
+삽입되는 데이터 요약: 사용자 5명, 공고 7개(1개 마감), 역할 19개, 지원 10건. 초기 비밀번호는 모두 `password`. 상세 내용은 `docs/mock-data.sql` 참고.
+
+---
+
 ## 2. terraform destroy 전 정리
 
 `terraform destroy`는 비어있지 않은 S3 버킷·ECR 레포지토리를 삭제하지 못하고 실패한다 (`BucketNotEmpty`, `RepositoryNotEmptyException`). CD가 이미지를 push했거나 프론트엔드를 배포한 적이 있다면 destroy 전에 먼저 비워야 한다.
