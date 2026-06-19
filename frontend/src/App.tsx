@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import MainPage from './pages/MainPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/groups/:id" element={<GroupDetailPage />} />
           <Route path="/groups/:id/apply" element={<GroupApplyPage />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </AuthProvider>
   );
