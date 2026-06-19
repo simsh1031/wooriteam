@@ -39,7 +39,7 @@ export default function MainPage() {
 
         <div className="hero-actions">
           <Link to="/posts" className="btn btn-primary btn-lg">공고 둘러보기</Link>
-          <Link to={isLoggedIn ? '/profiles' : '/login'} className="btn btn-outline btn-lg">팀원 모집하기</Link>
+          <Link to={isLoggedIn ? '/profiles' : '/login'} className="btn btn-outline btn-lg">팀원 찾아보기</Link>
         </div>
       </section>
 
