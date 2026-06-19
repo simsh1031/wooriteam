@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import wooriteam.entity.Group;
 import wooriteam.entity.Post;
 import wooriteam.entity.User;
 import wooriteam.enums.RoleType;
@@ -22,4 +23,6 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     List<Post> findAllWithRoles();
 
     List<Post> findByClosedFalseAndApplicationDeadlineBefore(LocalDate date);
+
+    List<Post> findByGroupOrderByCreatedAtDesc(Group group);
 }

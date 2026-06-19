@@ -9,10 +9,12 @@ import wooriteam.common.ApiResponse;
 import wooriteam.dto.request.PasswordChangeRequest;
 import wooriteam.dto.request.UserProfileRequest;
 import wooriteam.dto.response.MyApplicationResponse;
+import wooriteam.dto.response.MyGroupResponse;
 import wooriteam.dto.response.PostSummaryResponse;
 import wooriteam.dto.response.UserProfileResponse;
 import wooriteam.security.CustomUserDetails;
 import wooriteam.service.BookmarkService;
+import wooriteam.service.GroupService;
 import wooriteam.service.MyPageService;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class MyPageController {
 
     private final MyPageService myPageService;
     private final BookmarkService bookmarkService;
+    private final GroupService groupService;
 
     @GetMapping("/posts")
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getMyPosts(
@@ -62,5 +65,11 @@ public class MyPageController {
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getMyBookmarks(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(bookmarkService.getMyBookmarks(userDetails.getUserId())));
+    }
+
+    @GetMapping("/groups")
+    public ResponseEntity<ApiResponse<List<MyGroupResponse>>> getMyGroups(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(groupService.getMyGroups(userDetails.getUserId())));
     }
 }

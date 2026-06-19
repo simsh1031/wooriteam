@@ -48,6 +48,7 @@
 }
 .apply-cta-msg { font-size: 14px; color: var(--gray-500); }
 .apply-cta-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.apply-cta-blocked { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
 
 .bookmark-btn {

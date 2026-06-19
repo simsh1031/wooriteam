@@ -24,6 +24,8 @@ public class PostSummaryResponse {
     private final LocalDate projectEndDate;
     private final LocalDateTime createdAt;
     private final String authorNickname;
+    private final Long groupId;
+    private final String groupName;
     private final List<RoleType> roleTypes;
     private final List<RoleStack> roleStacks;
 
@@ -38,6 +40,8 @@ public class PostSummaryResponse {
         this.projectEndDate = post.getProjectEndDate();
         this.createdAt = post.getCreatedAt();
         this.authorNickname = post.getUser().getNickname();
+        this.groupId = post.getGroup() != null ? post.getGroup().getId() : null;
+        this.groupName = post.getGroup() != null ? post.getGroup().getName() : null;
         this.roleTypes = post.getRoles().stream()
                 .map(r -> r.getRoleType())
                 .distinct()

@@ -1,4 +1,5 @@
 .post-form-title { font-family: var(--font-pixel); font-size: 22px; font-weight: 400; color: var(--gray-900); margin-bottom: 24px; letter-spacing: -0.5px; }
+.post-form-group-notice { font-size: 13px; color: var(--green-600); background: var(--green-50); padding: 10px 14px; margin-top: -16px; margin-bottom: 24px; }
 .post-form { padding: 32px 36px; display: flex; flex-direction: column; gap: 22px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 

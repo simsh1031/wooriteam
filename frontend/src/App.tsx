@@ -14,6 +14,10 @@ import SearchResultPage from './pages/SearchResultPage';
 import ProfilesPage from './pages/ProfilesPage';
 import ProfileDetailPage from './pages/ProfileDetailPage';
 import ReportPage from './pages/ReportPage';
+import GroupListPage from './pages/GroupListPage';
+import GroupDetailPage from './pages/GroupDetailPage';
+import GroupFormPage from './pages/GroupFormPage';
+import GroupApplyPage from './pages/GroupApplyPage';
 
 export default function App() {
   return (
@@ -35,6 +39,10 @@ export default function App() {
           <Route path="/profiles" element={<ProfilesPage />} />
           <Route path="/profiles/:userId" element={<ProfileDetailPage />} />
           <Route path="/report" element={<ReportPage />} />
+          <Route path="/groups" element={<GroupListPage />} />
+          <Route path="/groups/new" element={<GroupFormPage />} />
+          <Route path="/groups/:id" element={<GroupDetailPage />} />
+          <Route path="/groups/:id/apply" element={<GroupApplyPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

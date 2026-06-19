@@ -65,6 +65,8 @@ export interface PostDetailResponse {
   createdAt: string;
   authorId: number;
   authorNickname: string;
+  groupId: number | null;
+  groupName: string | null;
   roles: PostRoleResponse[];
 }
 
@@ -84,6 +86,8 @@ export interface PostSummaryResponse {
   projectEndDate: string | null;
   createdAt: string;
   authorNickname: string;
+  groupId: number | null;
+  groupName: string | null;
   roleTypes: RoleType[];
   roleStacks: PostRoleStack[];
 }
@@ -131,6 +135,7 @@ export interface PostCreateRequest {
   projectStartDate: string | '';
   projectEndDate: string | '';
   roles: PostRoleRequest[];
+  groupId?: number | null;
 }
 
 export interface UserProfileResponse {
@@ -166,6 +171,61 @@ export interface UserProfileRequest {
   experience: string;
   isPublic: boolean;
   contactEmail: string;
+}
+
+export interface GroupSummaryResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerId: number;
+  ownerNickname: string;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface GroupMemberResponse {
+  id: number;
+  userId: number;
+  nickname: string;
+  status: 'PENDING' | 'APPROVED';
+  joinedAt: string;
+  introduction: string | null;
+  experience: string | null;
+  portfolioLink: string | null;
+  email: string | null;
+}
+
+export interface GroupDetailResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerId: number;
+  ownerNickname: string;
+  memberCount: number;
+  createdAt: string;
+  myStatus: 'OWNER' | 'PENDING' | 'APPROVED' | 'NONE';
+  members: GroupMemberResponse[];
+  pendingMembers: GroupMemberResponse[] | null;
+}
+
+export interface MyGroupResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  role: 'OWNER' | 'MEMBER';
+  memberCount: number;
+}
+
+export interface GroupCreateRequest {
+  name: string;
+  description: string;
+}
+
+export interface GroupJoinRequest {
+  introduction: string;
+  experience: string;
+  portfolioLink: string;
+  email: string;
 }
 
 export const TECH_STACKS: Record<RoleType, string[]> = {

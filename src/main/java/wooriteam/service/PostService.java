@@ -7,6 +7,7 @@ import wooriteam.dto.request.PostCreateRequest;
 import wooriteam.dto.request.PostUpdateRequest;
 import wooriteam.dto.response.PostDetailResponse;
 import wooriteam.dto.response.PostSummaryResponse;
+import wooriteam.entity.Group;
 import wooriteam.entity.Post;
 import wooriteam.entity.PostRole;
 import wooriteam.entity.User;
@@ -29,10 +30,14 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final GroupService groupService;
 
     public PostDetailResponse createPost(PostCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Group group = request.getGroupId() != null
+                ? groupService.getGroupForPost(request.getGroupId(), userId)
+                : null;
         Post post = Post.builder()
                 .user(user)
                 .title(request.getTitle())
@@ -42,6 +47,7 @@ public class PostService {
                 .applicationDeadline(request.getApplicationDeadline())
                 .projectStartDate(request.getProjectStartDate())
                 .projectEndDate(request.getProjectEndDate())
+                .group(group)
                 .build();
         request.getRoles().forEach(roleReq -> {
             PostRole role = PostRole.builder()
@@ -69,6 +75,14 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
         return new PostDetailResponse(post);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> getPostsByGroup(Long groupId) {
+        Group group = groupService.getGroup(groupId);
+        return postRepository.findByGroupOrderByCreatedAtDesc(group).stream()
+                .map(PostSummaryResponse::new)
+                .collect(Collectors.toList());
     }
 
     public PostDetailResponse updatePost(Long postId, PostUpdateRequest request, Long userId) {
