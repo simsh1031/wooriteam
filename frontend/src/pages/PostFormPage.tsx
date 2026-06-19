@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { createPost, getPost, updatePost } from '../api/posts';
+import { getGroup } from '../api/groups';
 import type { Difficulty, PostRoleRequest, ProjectType, RoleType } from '../api/types';
 import { ROLE_LABELS } from '../api/types';
 import TechStackSelector from '../components/TechStackSelector';
@@ -28,6 +29,9 @@ export default function PostFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ? Number(searchParams.get('groupId')) : null;
+  const [groupName, setGroupName] = useState('');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -66,6 +70,11 @@ export default function PostFormPage() {
     });
   }, [id]);
 
+  useEffect(() => {
+    if (!groupId || isEdit) return;
+    getGroup(groupId).then((res) => setGroupName(res.data.data.name)).catch(() => {});
+  }, [groupId, isEdit]);
+
   const toggleRole = (role: RoleType) => {
     setSelectedRoles((prev) =>
       prev.includes(role)
@@ -100,6 +109,7 @@ export default function PostFormPage() {
       projectStartDate: projectStartDate || '',
       projectEndDate: projectEndDate || '',
       roles: selectedRoles.map((r) => roleDetails[r] ?? emptyRole(r)),
+      groupId: !isEdit ? groupId : undefined,
     };
     try {
       if (isEdit) {
@@ -120,6 +130,9 @@ export default function PostFormPage() {
     <div className="post-form-page page">
       <div className="container">
         <h1 className="post-form-title">{isEdit ? '공고 수정' : '공고 작성'}</h1>
+        {groupId && !isEdit && (
+          <p className="post-form-group-notice">'{groupName || `그룹 #${groupId}`}' 그룹 전용 공고로 등록됩니다.</p>
+        )}
         <form onSubmit={handleSubmit} className="post-form card">
           <div className="form-group">
             <label className="form-label">제목 *</label>

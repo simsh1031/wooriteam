@@ -29,10 +29,14 @@ public class ApplicationService {
     private final PostRoleRepository postRoleRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final GroupService groupService;
 
     public ApplicationResponse apply(Long postId, ApplicationRequest request, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (post.getGroup() != null) {
+            groupService.requireMembership(post.getGroup(), userId);
+        }
         PostRole role = postRoleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new CustomException(ErrorCode.ROLE_NOT_FOUND));
         if (!role.getPost().getId().equals(postId)) {
@@ -91,6 +95,9 @@ public class ApplicationService {
     public ApplicationResponse updateMyApplication(Long postId, ApplicationRequest request, Long userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (post.getGroup() != null) {
+            groupService.requireMembership(post.getGroup(), userId);
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Application application = applicationRepository.findByPostAndUser(post, user)

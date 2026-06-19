@@ -18,10 +18,11 @@ export default function Header() {
       <div className="header-inner container">
         <Link to="/" className="header-logo">우리팀</Link>
         <nav className="header-nav">
-          <Link to="/posts" className="header-link">공고 보기</Link>
+          <Link to="/posts" className="header-link">공고</Link>
           {isLoggedIn ? (
             <>
-              <Link to="/profiles" className="header-link">회원 프로필</Link>
+              <Link to="/profiles" className="header-link">프로필</Link>
+              <Link to="/groups" className="header-link">그룹</Link>
               <Link to="/posts/new" className="btn btn-outline btn-sm">공고 올리기</Link>
               <Link to="/my" className="header-link">{nickname}</Link>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>

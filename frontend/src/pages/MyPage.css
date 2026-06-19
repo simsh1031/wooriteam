@@ -35,6 +35,12 @@
 .mybookmark-card { padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
 .mybookmark-header { display: flex; align-items: center; gap: 8px; }
 
+.mygroup-list { display: flex; flex-direction: column; gap: 12px; }
+.mygroup-card { padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+.mygroup-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mygroup-desc { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
+.mygroup-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
 .settings-section { display: flex; flex-direction: column; gap: 16px; }
 .settings-card { padding: 28px 24px; }
 .settings-title { font-size: 17px; font-weight: 700; color: var(--gray-900); margin-bottom: 20px; }

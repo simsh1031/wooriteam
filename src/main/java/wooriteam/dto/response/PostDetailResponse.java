@@ -24,6 +24,8 @@ public class PostDetailResponse {
     private final LocalDateTime createdAt;
     private final Long authorId;
     private final String authorNickname;
+    private final Long groupId;
+    private final String groupName;
     private final List<PostRoleResponse> roles;
 
     public PostDetailResponse(Post post) {
@@ -39,6 +41,8 @@ public class PostDetailResponse {
         this.createdAt = post.getCreatedAt();
         this.authorId = post.getUser().getId();
         this.authorNickname = post.getUser().getNickname();
+        this.groupId = post.getGroup() != null ? post.getGroup().getId() : null;
+        this.groupName = post.getGroup() != null ? post.getGroup().getName() : null;
         this.roles = post.getRoles().stream()
                 .map(PostRoleResponse::new)
                 .collect(Collectors.toList());

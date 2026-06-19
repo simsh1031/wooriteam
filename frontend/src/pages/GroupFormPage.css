@@ -1,0 +1,4 @@
+.group-form-title { font-family: var(--font-pixel); font-size: 24px; font-weight: 400; color: var(--gray-900); letter-spacing: -0.5px; }
+.group-form-sub { font-size: 14px; color: var(--gray-400); margin-top: 6px; margin-bottom: 24px; }
+.group-form { padding: 28px; display: flex; flex-direction: column; gap: 20px; max-width: 600px; }
+.group-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }

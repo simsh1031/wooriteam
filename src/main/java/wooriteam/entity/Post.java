@@ -52,6 +52,10 @@ public class Post {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostRole> roles = new ArrayList<>();
 
@@ -62,7 +66,7 @@ public class Post {
 
     @Builder
     public Post(User user, String title, String description, Difficulty difficulty, ProjectType projectType,
-                 LocalDate applicationDeadline, LocalDate projectStartDate, LocalDate projectEndDate) {
+                 LocalDate applicationDeadline, LocalDate projectStartDate, LocalDate projectEndDate, Group group) {
         this.user = user;
         this.title = title;
         this.description = description;
@@ -71,6 +75,7 @@ public class Post {
         this.applicationDeadline = applicationDeadline;
         this.projectStartDate = projectStartDate;
         this.projectEndDate = projectEndDate;
+        this.group = group;
     }
 
     public void update(String title, String description, Difficulty difficulty, ProjectType projectType,
@@ -86,5 +91,12 @@ public class Post {
 
     public void close() {
         this.closed = true;
+    }
+
+    public boolean isClosed() {
+        if (closed) {
+            return true;
+        }
+        return applicationDeadline != null && applicationDeadline.isBefore(LocalDate.now());
     }
 }

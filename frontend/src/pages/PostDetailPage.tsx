@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getPost, deletePost, closePost, addBookmark, removeBookmark } from '../api/posts';
 import { getMyApplicationForPost, withdrawMyApplication, getMyBookmarks } from '../api/applications';
-import type { PostDetailResponse, ApplicationResponse } from '../api/types';
+import { getGroup } from '../api/groups';
+import type { PostDetailResponse, ApplicationResponse, GroupDetailResponse } from '../api/types';
 import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import './PostDetailPage.css';
@@ -18,6 +19,7 @@ export default function PostDetailPage() {
   const [myApplication, setMyApplication] = useState<ApplicationResponse | null>(null);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [group, setGroup] = useState<GroupDetailResponse | null>(null);
 
   useEffect(() => {
     getPost(postId)
@@ -35,7 +37,15 @@ export default function PostDetailPage() {
       .catch(() => {});
   }, [postId, isLoggedIn]);
 
+  useEffect(() => {
+    if (!isLoggedIn || !post?.groupId) { setGroup(null); return; }
+    getGroup(post.groupId)
+      .then((res) => setGroup(res.data.data))
+      .catch(() => setGroup(null));
+  }, [isLoggedIn, post?.groupId]);
+
   const isAuthor = post && userId !== null && post.authorId === userId;
+  const groupMembershipApproved = !post?.groupId || group?.myStatus === 'OWNER' || group?.myStatus === 'APPROVED';
 
   const handleWithdraw = async () => {
     if (!confirm('지원을 철회하시겠습니까?')) return;
@@ -183,6 +193,17 @@ export default function PostDetailPage() {
               <div className="apply-cta-actions">
                 <Link to={`/posts/${postId}/apply`} className="btn btn-primary btn-lg">지원서 수정</Link>
                 <button onClick={handleWithdraw} className="btn btn-danger btn-lg">지원 철회</button>
+              </div>
+            ) : !groupMembershipApproved ? (
+              <div className="apply-cta-blocked">
+                <p className="apply-cta-msg">
+                  {group?.myStatus === 'PENDING'
+                    ? '그룹 가입 승인 후 지원할 수 있어요.'
+                    : '이 공고는 그룹 멤버만 지원할 수 있어요.'}
+                </p>
+                {group?.myStatus === 'NONE' && (
+                  <Link to={`/groups/${post.groupId}/apply`} className="btn btn-outline btn-lg">그룹 가입 신청하기</Link>
+                )}
               </div>
             ) : (
               <Link to={`/posts/${postId}/apply`} className="btn btn-primary btn-lg">이 팀에 지원하기</Link>

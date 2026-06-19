@@ -4,13 +4,14 @@ import { getMyPosts, getMyApplications, getMyBookmarks } from '../api/applicatio
 import { closePost, deletePost } from '../api/posts';
 import { changePassword, withdraw } from '../api/auth';
 import { getMyProfile, updateMyProfile } from '../api/profiles';
-import type { MyApplicationResponse, PostSummaryResponse, UserProfileResponse, RoleType, CareerType } from '../api/types';
+import { getMyGroups } from '../api/groups';
+import type { MyApplicationResponse, MyGroupResponse, PostSummaryResponse, UserProfileResponse, RoleType, CareerType } from '../api/types';
 import { ROLE_LABELS, DIFFICULTY_LABELS, PROJECT_TYPE_LABELS, TECH_STACKS, CAREER_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import TechStackSelector, { type TechStackSelectorHandle } from '../components/TechStackSelector';
 import './MyPage.css';
 
-type Tab = 'posts' | 'applications' | 'bookmarks' | 'profile' | 'settings';
+type Tab = 'posts' | 'applications' | 'bookmarks' | 'groups' | 'profile' | 'settings';
 
 const ALL_ROLES: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
 
@@ -38,6 +39,9 @@ export default function MyPage() {
   const [myBookmarks, setMyBookmarks] = useState<PostSummaryResponse[]>([]);
   const [bookmarksLoaded, setBookmarksLoaded] = useState(false);
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
+  const [myGroups, setMyGroups] = useState<MyGroupResponse[]>([]);
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
+  const [groupsLoading, setGroupsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
@@ -77,6 +81,15 @@ export default function MyPage() {
         .finally(() => setBookmarksLoading(false));
     }
   }, [tab, bookmarksLoaded]);
+
+  useEffect(() => {
+    if (tab === 'groups' && !groupsLoaded) {
+      setGroupsLoading(true);
+      getMyGroups()
+        .then((res) => { setMyGroups(res.data.data); setGroupsLoaded(true); })
+        .finally(() => setGroupsLoading(false));
+    }
+  }, [tab, groupsLoaded]);
 
   useEffect(() => {
     if (tab === 'profile' && !profileLoaded) {
@@ -193,6 +206,9 @@ export default function MyPage() {
           <button className={`mypage-tab ${tab === 'bookmarks' ? 'active' : ''}`} onClick={() => setTab('bookmarks')}>
             북마크 {bookmarksLoaded && <span className="tab-count">{myBookmarks.length}</span>}
           </button>
+          <button className={`mypage-tab ${tab === 'groups' ? 'active' : ''}`} onClick={() => setTab('groups')}>
+            내 그룹 {groupsLoaded && <span className="tab-count">{myGroups.length}</span>}
+          </button>
           <button className={`mypage-tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>
             프로필 편집
           </button>
@@ -284,6 +300,33 @@ export default function MyPage() {
                   {post.difficulty && <span className="badge badge-gray">{DIFFICULTY_LABELS[post.difficulty]}</span>}
                   {post.projectType && <span className="badge badge-gray">{PROJECT_TYPE_LABELS[post.projectType]}</span>}
                   <span className="mypost-date">{post.authorNickname}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {tab === 'groups' && (groupsLoading ? (
+          <div className="spinner" />
+        ) : myGroups.length === 0 ? (
+          <div className="empty-state">
+            <p>아직 소속된 그룹이 없어요.</p>
+            <Link to="/groups" className="btn btn-outline" style={{ marginTop: 16 }}>그룹 찾아보기</Link>
+          </div>
+        ) : (
+          <div className="mygroup-list">
+            {myGroups.map((group) => (
+              <div key={group.id} className="mygroup-card card">
+                <div className="mygroup-card-top">
+                  <Link to={`/groups/${group.id}`} className="mypost-title">{group.name}</Link>
+                  <span className={`badge ${group.role === 'OWNER' ? 'badge-green' : 'badge-gray'}`}>
+                    {group.role === 'OWNER' ? '그룹장' : '멤버'}
+                  </span>
+                </div>
+                <p className="mygroup-desc">{group.description || '그룹 소개가 없어요.'}</p>
+                <div className="mygroup-card-footer">
+                  <span className="mypost-date">멤버 {group.memberCount}명</span>
+                  <Link to={`/groups/${group.id}?tab=posts`} className="btn btn-ghost btn-bordered btn-sm">모집 공고 보기</Link>
                 </div>
               </div>
             ))}
