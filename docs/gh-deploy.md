@@ -38,7 +38,11 @@
    gh secret set ALB_DNS --body "$(terraform -chdir=infra output -raw alb_dns_name)"
    gh secret set CLOUDFRONT_DISTRIBUTION_ID --body "$(terraform -chdir=infra output -raw cloudfront_distribution_id)"
    gh secret set FRONTEND_S3_BUCKET --body "$(terraform -chdir=infra output -raw frontend_bucket_name)"
-   gh secret set CLOUDFRONT_ORIGIN_SECRET --body "<terraform.tfvars의 cloudfront_origin_secret 값>"
+   # gh secret set CLOUDFRONT_ORIGIN_SECRET --body "<terraform.tfvars의 cloudfront_origin_secret 값>"
+   
+   $secretMatch = Select-String -Path infra/terraform.tfvars -Pattern '^\s*cloudfront_origin_secret\s*=\s*"(.*)"\s*$'
+   $cfSecret = $secretMatch.Matches[0].Groups[1].Value
+   gh secret set CLOUDFRONT_ORIGIN_SECRET --body $cfSecret
    ```
 
 3. 시크릿 갱신 후 실패했던 워크플로 재실행

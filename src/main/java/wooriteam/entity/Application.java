@@ -27,6 +27,7 @@ public class Application {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private String motivation;
 
     @Column(name = "tech_stack")
@@ -34,6 +35,7 @@ public class Application {
 
     private String experience;
 
+    @Column(nullable = false)
     private String contact;
 
     @Column(name = "created_at", nullable = false)
