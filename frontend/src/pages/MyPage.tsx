@@ -237,6 +237,7 @@ export default function MyPage() {
                     {!post.closed && (
                       <button onClick={() => handleClose(post.id)} className="btn btn-outline btn-sm">마감 처리</button>
                     )}
+                    <button onClick={() => handleDelete(post.id)} className="btn btn-outline btn-sm">삭제</button>
                     <Link to={`/posts/${post.id}/applicants`} className="btn btn-ghost btn-bordered btn-sm">지원자 보기</Link>
                   </div>
                 </div>

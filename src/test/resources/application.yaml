@@ -11,6 +11,15 @@ spring:
       ddl-auto: create-drop
     show-sql: true
     open-in-view: false
+  mail:
+    host: localhost
+    port: 587
+    username:
+    password:
+
+app:
+  mail:
+    enabled: false
 
 jwt:
   secret: test-secret-key-must-be-at-least-32-characters-long-for-testing
