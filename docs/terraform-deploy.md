@@ -89,6 +89,24 @@ aws s3 rm s3://$(terraform -chdir=infra output -raw frontend_bucket_name) --recu
 
 > ALB 액세스 로그 버킷(`wooriteam-alb-logs-<계정ID>`)은 `force_destroy = true`로 설정되어 있어 별도로 비우지 않아도 destroy 시 자동 삭제된다.
 
+### Grafana IAM User(`wooriteam-grafana`) Access Key 삭제
+
+Grafana Cloud CloudWatch 데이터소스 연결을 위해 AWS 콘솔에서 수동으로 발급한 Access Key는 Terraform이 관리하지 않는 리소스라서, 남아있으면 `terraform destroy`가 IAM User 삭제 단계에서 아래 에러로 실패한다.
+
+```
+Error: deleting IAM User (wooriteam-grafana): operation error IAM: DeleteUser, ...
+DeleteConflict: Cannot delete entity, must delete access keys first.
+```
+
+destroy 전에 먼저 Access Key를 확인하고 삭제한다.
+
+```bash
+aws iam list-access-keys --user-name wooriteam-grafana
+aws iam delete-access-key --user-name wooriteam-grafana --access-key-id <위에서 조회된 AccessKeyId>
+```
+
+> 재배포 후 Grafana 데이터소스를 다시 쓰려면, `terraform apply`로 `wooriteam-grafana` User가 재생성된 뒤 **새 Access Key를 다시 발급**해서 Grafana 데이터소스 설정에 넣어야 한다 (지운 키는 재사용 불가). 상세 절차는 [`grafana-deploy.md`](./grafana-deploy.md) 참고.
+
 ---
 
 ## 3. terraform destroy

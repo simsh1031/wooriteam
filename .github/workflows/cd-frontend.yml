@@ -2,7 +2,7 @@ name: CD - Frontend
 
 on:
   push:
-    branches: [feature/k6] #[develop] #[main]
+    branches: [develop] #[main]
     paths:
       - 'frontend/**'
       - '.github/workflows/cd-frontend.yml'
