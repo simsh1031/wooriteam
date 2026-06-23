@@ -6,6 +6,13 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      validation-timeout: 5000
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
@@ -42,6 +49,7 @@ cors:
 
 server:
   port: 8080
+  shutdown: graceful
 
 management:
   endpoints:
