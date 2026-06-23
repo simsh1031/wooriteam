@@ -153,11 +153,11 @@
 
 > 상세 절차: `docs/infra.md` "11-3. Grafana Cloud 연동" 참고
 
-- [ ] `terraform apply`로 `wooriteam-grafana` IAM User(`infra/iam.tf`) 생성
+- [x] `terraform apply`로 `wooriteam-grafana` IAM User(`infra/iam.tf`) 생성
 - [x] Grafana Cloud 무료 계정 생성 + 스택 생성 (가입 시 자동 생성된 기본 스택 사용, 리전: 일본)
-- [ ] `wooriteam-grafana` IAM User의 Access Key 발급
-- [ ] Grafana Cloud > Connections > AWS > CloudWatch 데이터소스 연결 (Access Key, `ap-northeast-2`)
-- [ ] 대시보드 import (ECS `23`, RDS `707`, ALB `650`, CloudWatch Logs `13639`)
+- [x] `wooriteam-grafana` IAM User의 Access Key 발급
+- [x] Grafana Cloud > Connections > AWS > CloudWatch 데이터소스 연결 (Access Key, `ap-northeast-2`) — 절차·트러블슈팅은 `docs/grafana-deploy.md` 참고
+- [x] 대시보드 import — 공개 대시보드(ECS `23`/RDS `707`/ALB `650`/CloudWatch Logs `13639`) 대신 ECS/ALB/RDS 커스텀 대시보드(`docs/grafana-dashboard.json`) 직접 구성해 import
 - [ ] (선택) Discord Contact point 등록 + Alert rule 설정 (ECS CPU>80%, ALB 5xx>10건/분, RDS 커넥션>60개)
 
 ---
@@ -188,11 +188,11 @@
   - VU 1~5, 30초, 주요 엔드포인트(`GET /api/posts`, `GET /actuator/health`) 호출해 200 응답 확인
 - [ ] 2단계 — 평상시 부하 (Load test)
   - VU 20~30, 3~5분 유지, 응답 시간(p95) · 에러율 0% 확인
-  - Grafana ECS 대시보드(`23`)로 CPU/메모리 사용률 관찰
+  - Grafana `wooriteam Infra (ECS/ALB/RDS)` 대시보드(`docs/grafana-dashboard.json`)의 ECS CPU/Memory 패널로 사용률 관찰
 - [ ] 3단계 — 한계 테스트 (Stress test, Auto Scaling 트리거 확인용)
   - VU를 50 → 100까지 단계적(ramp-up)으로 증가, 5~10분
   - ECS Auto Scaling이 desired_count 2 → 6 사이에서 실제로 태스크를 늘리는지 확인 (`infra/ecs.tf` 스케일링 정책 기준)
-  - RDS 커넥션 수가 HikariCP 풀 한도(`maximum-pool-size × 태스크 수`) 내에서 66개를 넘지 않는지 Grafana RDS 대시보드(`707`)로 확인
+  - RDS 커넥션 수가 HikariCP 풀 한도(`maximum-pool-size × 태스크 수`) 내에서 66개를 넘지 않는지 같은 대시보드의 RDS Database Connections 패널로 확인
 - [ ] 4단계 — 스파이크 테스트 (선택)
   - 짧은 시간(10~30초) 동안 VU를 급격히 100까지 올렸다가 0으로 — ALB 5xx 알람·Discord 알림이 정상 동작하는지 확인
 - [ ] 테스트 후 정리
@@ -207,10 +207,10 @@
 
 - [ ] `terraform apply` 실행 후 `terraform output`으로 `alb_dns_name`/`cloudfront_domain_name`/`rds_endpoint` 등 확인
 - [ ] 배포 확인 — `/actuator/health` 200 응답 확인, 필요 시 `develop` 브랜치 push로 `cd.yml` CD 파이프라인 1회 실행해 최신 이미지 배포
-- [ ] Grafana 연동 마무리
-  - [ ] AWS 콘솔에서 `wooriteam-grafana` IAM User Access Key 발급
-  - [ ] Grafana Cloud Connections → AWS → CloudWatch 데이터소스 연결 (Access Key, `ap-northeast-2`)
-  - [ ] 대시보드 import — ECS(`23`), RDS(`707`), ALB(`650`), CloudWatch Logs(`13639`)
+- [x] Grafana 연동 마무리
+  - [x] AWS 콘솔에서 `wooriteam-grafana` IAM User Access Key 발급
+  - [x] Grafana Cloud Connections → AWS → CloudWatch 데이터소스 연결 (Access Key, `ap-northeast-2`)
+  - [x] 대시보드 import — ECS/ALB/RDS 커스텀 대시보드(`docs/grafana-dashboard.json`)로 대체
   - [ ] (선택) Discord Contact point 등록 + Alert rule 설정
 - [ ] k6 부하테스트 실행
   - [ ] `k6 run -e BASE_URL=<ALB/CloudFront 주소> k6/smoke.js`
