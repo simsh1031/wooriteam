@@ -36,7 +36,7 @@ spring:
 
 app:
   mail:
-    enabled: ${MAIL_ENABLED:false}
+    enabled: ${MAIL_ENABLED:true}
     from: ${MAIL_FROM:${MAIL_USERNAME:}}
     admin: ${ADMIN_EMAIL:${MAIL_FROM:${MAIL_USERNAME:}}}
 
