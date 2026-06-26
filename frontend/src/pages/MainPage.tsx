@@ -68,10 +68,6 @@ export default function MainPage() {
           ))}
         </div>
       </section>
-
-      <div className="main-footer">
-        <Link to="/report" className="report-link">신고하기</Link>
-      </div>
     </main>
   );
 }

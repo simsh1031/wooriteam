@@ -44,3 +44,25 @@ resource "aws_secretsmanager_secret_version" "cloudfront_origin_secret" {
   secret_id     = aws_secretsmanager_secret.cloudfront_origin_secret.id
   secret_string = jsonencode({ secret = var.cloudfront_origin_secret })
 }
+
+resource "aws_secretsmanager_secret" "mail_username" {
+  name = "${var.project_name}/prod/mail-username"
+
+  tags = { Name = "${var.project_name}-mail-username" }
+}
+
+resource "aws_secretsmanager_secret_version" "mail_username" {
+  secret_id     = aws_secretsmanager_secret.mail_username.id
+  secret_string = jsonencode({ username = var.mail_username })
+}
+
+resource "aws_secretsmanager_secret" "mail_password" {
+  name = "${var.project_name}/prod/mail-password"
+
+  tags = { Name = "${var.project_name}-mail-password" }
+}
+
+resource "aws_secretsmanager_secret_version" "mail_password" {
+  secret_id     = aws_secretsmanager_secret.mail_password.id
+  secret_string = jsonencode({ password = var.mail_password })
+}
