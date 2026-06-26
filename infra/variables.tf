@@ -128,3 +128,36 @@ variable "cloudfront_origin_secret" {
   type        = string
   sensitive   = true
 }
+
+# ─── 메일 알림 (지원/신고 알림용 Gmail SMTP) ────────────────────────────────────
+variable "mail_enabled" {
+  description = "이메일 알림 발송 여부"
+  type        = bool
+  default     = false
+}
+
+variable "mail_username" {
+  description = "SMTP 발신용 Gmail 주소"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "mail_password" {
+  description = "SMTP 발신용 Gmail 앱 비밀번호 (16자리)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "admin_email" {
+  description = "신고 접수 알림을 받을 관리자 이메일 (미지정 시 mail_username 사용)"
+  type        = string
+  default     = ""
+}
+
+variable "mail_from" {
+  description = "발신 표시 이름/주소 (미지정 시 mail_username 사용)"
+  type        = string
+  default     = ""
+}

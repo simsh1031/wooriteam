@@ -43,13 +43,18 @@ resource "aws_ecs_task_definition" "main" {
         { name = "DB_HOST", value = aws_db_instance.main.address },
         { name = "DB_PORT", value = "3306" },
         { name = "DB_NAME", value = var.db_name },
-        { name = "CORS_ALLOWED_ORIGINS", value = "https://${aws_cloudfront_distribution.main.domain_name}" }
+        { name = "CORS_ALLOWED_ORIGINS", value = "https://${aws_cloudfront_distribution.main.domain_name}" },
+        { name = "MAIL_ENABLED", value = tostring(var.mail_enabled) },
+        { name = "MAIL_FROM", value = var.mail_from != "" ? var.mail_from : var.mail_username },
+        { name = "ADMIN_EMAIL", value = var.admin_email != "" ? var.admin_email : var.mail_username }
       ]
 
       secrets = [
         { name = "DB_USERNAME", valueFrom = "${aws_secretsmanager_secret.db_username.arn}:username::" },
         { name = "DB_PASSWORD", valueFrom = "${aws_secretsmanager_secret.db_password.arn}:password::" },
-        { name = "JWT_SECRET", valueFrom = "${aws_secretsmanager_secret.jwt_secret.arn}:secret::" }
+        { name = "JWT_SECRET", valueFrom = "${aws_secretsmanager_secret.jwt_secret.arn}:secret::" },
+        { name = "MAIL_USERNAME", valueFrom = "${aws_secretsmanager_secret.mail_username.arn}:username::" },
+        { name = "MAIL_PASSWORD", valueFrom = "${aws_secretsmanager_secret.mail_password.arn}:password::" }
       ]
 
       logConfiguration = {
