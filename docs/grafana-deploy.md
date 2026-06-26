@@ -55,7 +55,8 @@ Grafana → Connections → Data sources → Add new data source → **CloudWatc
 
 구성된 패널:
 
-- **ECS**: CPU Utilization, Memory Utilization (`ClusterName=wooriteam-cluster`, `ServiceName=wooriteam-service`)
+- **ECS**: CPU Utilization, Memory Utilization, Running/Desired Task Count (`ClusterName=wooriteam-cluster`, `ServiceName=wooriteam-service`)
+  - Task Count는 `ECS/ContainerInsights` 네임스페이스 사용 → **ECS Cluster에서 Container Insights가 활성화되어 있어야 메트릭이 찍힘**
 - **ALB**: Request Count, Target Response Time(Average + p95), 5XX Count (계정에 ALB가 하나뿐이므로 디멘션 미지정으로 자동 매칭)
 - **RDS**: CPU Utilization, Database Connections, Free Storage Space (`DBInstanceIdentifier=wooriteam-db`)
 
@@ -127,7 +128,7 @@ Grafana → Connections → Data sources → Add new data source → **CloudWatc
     {
       "title": "ECS CPU Utilization",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 1 },
       "id": 1,
       "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
       "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
@@ -154,7 +155,7 @@ Grafana → Connections → Data sources → Add new data source → **CloudWatc
     {
       "title": "ECS Memory Utilization",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
       "id": 2,
       "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
       "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
@@ -174,6 +175,50 @@ Grafana → Connections → Data sources → Add new data source → **CloudWatc
           "id": "",
           "expression": "",
           "label": "",
+          "period": ""
+        }
+      ]
+    },
+    {
+      "title": "ECS Task Count",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "id": 9,
+      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "ECS/ContainerInsights",
+          "metricName": "RunningTaskCount",
+          "statistic": "Average",
+          "dimensions": { "ClusterName": "wooriteam-cluster", "ServiceName": "wooriteam-service" },
+          "matchExact": true,
+          "region": "default",
+          "id": "",
+          "expression": "",
+          "label": "Running",
+          "period": ""
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "ECS/ContainerInsights",
+          "metricName": "DesiredTaskCount",
+          "statistic": "Average",
+          "dimensions": { "ClusterName": "wooriteam-cluster", "ServiceName": "wooriteam-service" },
+          "matchExact": true,
+          "region": "default",
+          "id": "",
+          "expression": "",
+          "label": "Desired",
           "period": ""
         }
       ]
