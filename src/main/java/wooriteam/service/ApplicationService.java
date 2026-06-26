@@ -45,13 +45,17 @@ public class ApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        String ownerEmail = post.getUser().getEmail();
+        String postTitle = post.getTitle();
+        String applicantNickname = user.getNickname();
+
         Application application = applicationRepository.findByPostAndUser(post, user).orElse(null);
         if (application != null) {
             if (!application.isWithdrawn()) {
                 throw new CustomException(ErrorCode.ALREADY_APPLIED);
             }
             application.update(role, request.getMotivation(), request.getTechStack(), request.getExperience(), request.getContact());
-            emailService.sendNewApplicationEmail(post, application);
+            emailService.sendNewApplicationEmail(ownerEmail, postTitle, applicantNickname, role.getRoleType().name(), post.getId());
             return new ApplicationResponse(application);
         }
 
@@ -65,7 +69,7 @@ public class ApplicationService {
                 .contact(request.getContact())
                 .build();
         application = applicationRepository.save(application);
-        emailService.sendNewApplicationEmail(post, application);
+        emailService.sendNewApplicationEmail(ownerEmail, postTitle, applicantNickname, role.getRoleType().name(), post.getId());
         return new ApplicationResponse(application);
     }
 
