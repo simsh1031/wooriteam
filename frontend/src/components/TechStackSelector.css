@@ -1,0 +1,60 @@
+.ts-selector { position: relative; width: 100%; }
+
+.ts-trigger {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 42px; padding: 6px 12px; border: 2px solid var(--gray-900);
+  border-radius: 0; background: var(--white); cursor: pointer;
+  transition: box-shadow 0.1s; gap: 8px;
+}
+.ts-trigger:hover { box-shadow: 3px 3px 0 var(--green-200); }
+
+.ts-placeholder { color: var(--gray-400); font-size: 14px; }
+.ts-tags { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+.ts-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--green-100); color: var(--green-600);
+  border-radius: 0; border: 1.5px solid var(--green-600); padding: 2px 8px; font-size: 12px; font-weight: 600;
+}
+.ts-tag-remove {
+  background: none; border: none; color: var(--green-600);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+}
+.ts-tag-remove:hover { color: var(--green-600); opacity: 0.7; }
+.ts-arrow { color: var(--gray-400); font-size: 11px; flex-shrink: 0; }
+
+.ts-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+  background: var(--white); border: 2px solid var(--gray-900);
+  border-radius: 0; box-shadow: 4px 4px 0 var(--gray-200);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.ts-options { overflow-y: auto; flex: 1; padding: 6px 0; }
+.ts-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; cursor: pointer; font-size: 14px;
+  transition: background 0.1s;
+}
+.ts-option:hover { background: var(--gray-50); }
+.ts-option input[type="checkbox"] { accent-color: var(--green-500); width: 15px; height: 15px; cursor: pointer; }
+
+.ts-custom {
+  display: flex; gap: 6px; padding: 8px 10px;
+  border-top: 1px solid var(--gray-100);
+}
+.ts-custom-input {
+  flex: 1; padding: 6px 10px; border: 1.5px solid var(--gray-300);
+  border-radius: 0; font-size: 13px;
+}
+.ts-custom-input:focus { border-color: var(--green-400); }
+.ts-custom-btn {
+  padding: 6px 12px; background: var(--green-500); color: var(--white);
+  border: 1.5px solid var(--gray-900); border-radius: 0; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.ts-custom-btn:hover { background: var(--green-600); }
+
+.ts-done-btn {
+  width: 100%; padding: 8px; border: 1.5px solid var(--gray-900); border-top: none;
+  border-radius: 0; background: var(--green-500); color: var(--white);
+  font-family: var(--font-pixel); font-size: 13px; font-weight: 400; cursor: pointer;
+}
+.ts-done-btn:hover { background: var(--green-600); }

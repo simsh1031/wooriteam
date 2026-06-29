@@ -27,6 +27,7 @@ public class Application {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private String motivation;
 
     @Column(name = "tech_stack")
@@ -34,10 +35,14 @@ public class Application {
 
     private String experience;
 
+    @Column(nullable = false)
     private String contact;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "withdrawn", nullable = false)
+    private boolean withdrawn = false;
 
     @PrePersist
     protected void onCreate() {
@@ -53,5 +58,18 @@ public class Application {
         this.techStack = techStack;
         this.experience = experience;
         this.contact = contact;
+    }
+
+    public void update(PostRole role, String motivation, String techStack, String experience, String contact) {
+        this.role = role;
+        this.motivation = motivation;
+        this.techStack = techStack;
+        this.experience = experience;
+        this.contact = contact;
+        this.withdrawn = false;
+    }
+
+    public void withdraw() {
+        this.withdrawn = true;
     }
 }

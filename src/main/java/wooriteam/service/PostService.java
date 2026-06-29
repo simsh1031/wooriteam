@@ -7,13 +7,17 @@ import wooriteam.dto.request.PostCreateRequest;
 import wooriteam.dto.request.PostUpdateRequest;
 import wooriteam.dto.response.PostDetailResponse;
 import wooriteam.dto.response.PostSummaryResponse;
+import wooriteam.entity.Group;
 import wooriteam.entity.Post;
 import wooriteam.entity.PostRole;
 import wooriteam.entity.User;
+import wooriteam.enums.Difficulty;
+import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 import wooriteam.exception.CustomException;
 import wooriteam.exception.ErrorCode;
 import wooriteam.repository.PostRepository;
+import wooriteam.repository.PostSpecification;
 import wooriteam.repository.UserRepository;
 
 import java.util.List;
@@ -26,16 +30,24 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final GroupService groupService;
 
     public PostDetailResponse createPost(PostCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Group group = request.getGroupId() != null
+                ? groupService.getGroupForPost(request.getGroupId(), userId)
+                : null;
         Post post = Post.builder()
                 .user(user)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .difficulty(request.getDifficulty())
                 .projectType(request.getProjectType())
+                .applicationDeadline(request.getApplicationDeadline())
+                .projectStartDate(request.getProjectStartDate())
+                .projectEndDate(request.getProjectEndDate())
+                .group(group)
                 .build();
         request.getRoles().forEach(roleReq -> {
             PostRole role = PostRole.builder()
@@ -50,10 +62,11 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getPosts(RoleType roleType) {
-        List<Post> posts = (roleType != null)
-                ? postRepository.findByRoleType(roleType)
-                : postRepository.findAllWithRoles();
+    public List<PostSummaryResponse> getPosts(RoleType roleType, Difficulty difficulty,
+                                              ProjectType projectType, List<String> techStacks,
+                                              String keyword) {
+        List<Post> posts = postRepository.findAll(
+                PostSpecification.withFilters(roleType, difficulty, projectType, techStacks, keyword));
         return posts.stream().map(PostSummaryResponse::new).collect(Collectors.toList());
     }
 
@@ -64,9 +77,18 @@ public class PostService {
         return new PostDetailResponse(post);
     }
 
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> getPostsByGroup(Long groupId) {
+        Group group = groupService.getGroup(groupId);
+        return postRepository.findByGroupOrderByCreatedAtDesc(group).stream()
+                .map(PostSummaryResponse::new)
+                .collect(Collectors.toList());
+    }
+
     public PostDetailResponse updatePost(Long postId, PostUpdateRequest request, Long userId) {
         Post post = getPostOwnedBy(postId, userId);
-        post.update(request.getTitle(), request.getDescription(), request.getDifficulty(), request.getProjectType());
+        post.update(request.getTitle(), request.getDescription(), request.getDifficulty(), request.getProjectType(),
+                request.getApplicationDeadline(), request.getProjectStartDate(), request.getProjectEndDate());
         post.getRoles().clear();
         request.getRoles().forEach(roleReq -> {
             PostRole role = PostRole.builder()

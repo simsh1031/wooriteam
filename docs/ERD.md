@@ -65,6 +65,10 @@ erDiagram
         BIGINT user_id FK
         ENUM status
         DATETIME joined_at
+        TEXT introduction
+        TEXT experience
+        VARCHAR portfolio_link
+        VARCHAR email
     }
 
     Bookmark {
@@ -76,10 +80,9 @@ erDiagram
 
     Report {
         BIGINT id PK
-        BIGINT reporter_id FK
-        ENUM target_type
-        BIGINT target_id
-        TEXT reason
+        BIGINT post_id FK
+        VARCHAR title
+        TEXT content
         DATETIME created_at
     }
 
@@ -87,13 +90,13 @@ erDiagram
     User ||--o{ Post : "writes"
     User ||--o{ Application : "submits"
     User ||--o{ Bookmark : "saves"
-    User ||--o{ Report : "reports"
     User ||--o{ GroupMember : "joins"
     User ||--o{ Group : "owns"
 
     Post ||--o{ PostRole : "has"
     Post ||--o{ Application : "receives"
     Post ||--o{ Bookmark : "bookmarked by"
+    Post ||--o{ Report : "reported by"
 
     PostRole ||--o{ Application : "applied to"
 
@@ -109,14 +112,14 @@ erDiagram
 | Post | project_type | `SIDE_PROJECT`, `HACKATHON`, `GRADUATION`, `BOOTCAMP` |
 | PostRole | role_type | `BACKEND`, `FRONTEND`, `DESIGN`, `PLANNING` |
 | GroupMember | status | `PENDING`, `APPROVED` |
-| Report | target_type | `POST`, `USER` |
 
 ## 비고
 
 - `Post.group_id` — nullable. 그룹 지정 시 해당 그룹 소속 공고로 제한 (Could)
 - `Post.deadline` — nullable. 설정 시 자동 마감 처리 (Could)
-- `Group`, `GroupMember`, `Bookmark`, `Report` — Could 범위
-- `UserProfile` — Should 범위
+- `Group`, `GroupMember`, `Bookmark`, `Report` — Could 범위 (구현 완료, 하단 "0615 수정본" 참고)
+- `UserProfile` — Should 범위 (구현 완료)
+- 원본 ERD의 `Report.target_type`(`POST`/`USER`)는 구현 시 `post_id` 단일 참조로 범위가 축소됨 — 하단 "0615 수정본" 참고
 
 ---
 
@@ -164,7 +167,7 @@ User와 1:1 관계. `is_public = true`인 사람만 회원 프로필 목록에 �
 | `Bookmark` | 관심 공고 저장 | `user_id` + `post_id` 쌍 |
 | `Group` | 소속 단체(대학, 부트캠프 등) | `owner_id` → User |
 | `GroupMember` | 그룹 가입 신청/승인 | `group_id` + `user_id`, `status`: PENDING → APPROVED |
-| `Report` | 공고/유저 신고 | `target_type`(`POST` or `USER`) + `target_id`로 다형성 참조 |
+| `Report` | 공고 신고 (구현 시 회원 신고는 범위 축소) | `post_id` 단일 참조 + `title`/`content` |
 
 `Post.group_id`는 nullable — null이면 전체 공개, 값이 있으면 해당 그룹 소속 공고.
 
@@ -183,3 +186,61 @@ User 가입
     → Application 제출 (지원동기, 기술스택, 연락처)
       → 게시자(Post.user_id)만 지원자 목록 조회 가능
 ```
+
+---
+
+## 0615 수정본 — 구현 반영 변경 사항
+
+> 6/5~6/12 작업으로 실제 구현(엔티티)이 위 원본 ERD에서 변경/추가됨. 원본은 기록으로 남기고, 변경분만 정리.
+
+### Post
+
+| 컬럼 | 변경 |
+|---|---|
+| `deadline` (DATE) | → `application_deadline` (DATE)로 이름 변경. "자동 마감 처리"는 미구현이며, 현재는 `GET /api/posts` 목록 조회 시 마감일이 지난 공고를 제외하는 용도로만 사용 |
+| `project_start_date` (DATE) | 신규 추가. 프로젝트 시작일 |
+| `project_end_date` (DATE) | 신규 추가. 프로젝트 종료일 |
+
+### UserProfile (Should — 구현 완료)
+
+| 컬럼 | 변경 |
+|---|---|
+| `career_type` (ENUM) | 신규 추가. 값: `NON_MAJOR_STUDENT`, `MAJOR_STUDENT`, `BOOTCAMP`, `JOB_SEEKER`, `JUNIOR`, `SENIOR`, `OTHER` |
+| `contact_email` (VARCHAR) | 신규 추가. 공개 프로필에 노출되는 연락용 이메일. `is_public = true`로 설정하려면 필수 |
+
+### Application
+
+| 컬럼 | 변경 |
+|---|---|
+| `withdrawn` (BOOLEAN, default false) | 신규 추가. 지원 철회 시 레코드를 삭제하지 않고 `true`로 표시하는 소프트 삭제 — 재지원 시 기존 내용 복원 가능 |
+
+### ENUM 변경
+
+| 엔티티 | 컬럼 | 변경 전 | 변경 후 |
+|---|---|---|---|
+| Post | project_type | `SIDE_PROJECT`, `HACKATHON`, `GRADUATION`, `BOOTCAMP` | `SIDE_PROJECT`, `GRADUATION`, `HACKATHON`, `STUDY`, `OTHER` |
+
+### 신규 ENUM
+
+| 엔티티 | 컬럼 | 값 |
+|---|---|---|
+| UserProfile | career_type | `NON_MAJOR_STUDENT`, `MAJOR_STUDENT`, `BOOTCAMP`, `JOB_SEEKER`, `JUNIOR`, `SENIOR`, `OTHER` |
+
+### Bookmark, Group, GroupMember, Report (Could — 구현 완료)
+
+| 컬럼 | 변경 |
+|---|---|
+| `GroupMember.introduction` (TEXT) | 신규 추가. 가입 신청 시 작성하는 자기소개 |
+| `GroupMember.experience` (TEXT) | 신규 추가. 가입 신청 시 작성하는 경험·경력 |
+| `GroupMember.portfolio_link` (VARCHAR, nullable) | 신규 추가. 포트폴리오 링크 |
+| `GroupMember.email` (VARCHAR) | 신규 추가. 가입 신청 시 연락용 이메일 (`User.email`과 별개) |
+| `Report.target_type` / `target_id` (다형성) | **범위 축소** — `post_id` (FK)로 변경, 회원(`USER`) 신고는 미구현. 공고 신고만 지원 |
+| `Report.reason` | `title`(신고 제목) + `content`(신고 내용) 두 컬럼으로 분리 |
+
+> 그룹 생성은 1인당 1개로 제한, 그룹 가입(신청 포함)은 1인당 최대 3개로 제한 (서비스 레이어에서 검증, ERD에는 컬럼으로 표현되지 않음).
+
+### 비고 갱신
+
+- `UserProfile`은 더 이상 "Should 미구현"이 아니라 구현 완료 상태 (`docs/api-spec.md` 4-4/4-5, 5-1/5-2 참고)
+- `Post.deadline`(`application_deadline`)은 목록 제외 필터로 사용될 뿐 아니라, `PostAutoCloseScheduler`(`@Scheduled(cron = "0 0 0 * * *")`)가 매일 자정 마감일이 지난 공고를 `closed = true`로 자동 전환한다 — Could 항목인 "공고 자동 마감"도 구현 완료
+- `Group`, `GroupMember`, `Bookmark`, `Report`는 모두 **구현 완료**(Could) 상태로, 원본 ERD에서 위 표와 같이 컬럼이 추가/변경되었다 (`docs/api-spec.md` 6~9번 참고). PLAN.md의 Could 범위 중 미구현 항목은 더 이상 없다.

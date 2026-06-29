@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'DungGeunMo';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.1/DungGeunMo.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --green-50: #f0faf5;
   --green-100: #d6f0e3;
@@ -19,7 +27,11 @@
   --danger: #ef4444;
   --danger-bg: #fef2f2;
 
+  --yellow-100: #fef3c7;
+  --yellow-600: #b45309;
+
   --font: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-pixel: 'DungGeunMo', var(--font);
   --radius: 8px;
   --radius-lg: 12px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
@@ -44,54 +56,60 @@ input, textarea, select { font-family: var(--font); outline: none; }
 /* 버튼 */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: 6px; padding: 9px 20px; border-radius: var(--radius);
-  font-size: 14px; font-weight: 600; transition: all 0.15s; white-space: nowrap;
+  gap: 6px; padding: 9px 20px; border-radius: 0; border: 2px solid transparent;
+  font-size: 14px; font-weight: 600; transition: transform 0.1s, box-shadow 0.1s, background 0.15s; white-space: nowrap;
 }
-.btn-primary { background: var(--green-500); color: var(--white); }
+.btn-primary { background: var(--green-500); color: var(--white); border-color: var(--gray-900); box-shadow: 3px 3px 0 var(--gray-900); }
 .btn-primary:hover { background: var(--green-600); }
-.btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
-.btn-outline { background: var(--white); color: var(--green-500); border: 1.5px solid var(--green-400); }
+.btn-primary:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--gray-900); }
+.btn-primary:disabled { background: var(--gray-300); border-color: var(--gray-300); box-shadow: none; cursor: not-allowed; }
+.btn-outline { background: var(--white); color: var(--green-600); border-color: var(--gray-900); box-shadow: 3px 3px 0 var(--green-200); }
 .btn-outline:hover { background: var(--green-50); }
+.btn-outline:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--green-200); }
 .btn-ghost { background: transparent; color: var(--gray-500); }
 .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
-.btn-danger { background: var(--white); color: var(--danger); border: 1.5px solid var(--danger); }
+.btn-bordered { border-color: var(--gray-900); }
+.btn-danger { background: var(--white); color: var(--danger); border-color: var(--gray-900); box-shadow: 3px 3px 0 var(--danger-bg); }
 .btn-danger:hover { background: var(--danger-bg); }
+.btn-danger:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--danger-bg); }
 .btn-sm { padding: 6px 14px; font-size: 13px; }
 .btn-lg { padding: 12px 28px; font-size: 16px; }
 
 /* 카드 */
-.card { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); }
+.card { background: var(--white); border-radius: 0; border: 2px solid var(--gray-900); box-shadow: 4px 4px 0 var(--gray-200); }
 
 /* 폼 */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 14px; font-weight: 600; color: var(--gray-700); }
 .form-input {
-  padding: 10px 14px; border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius); font-size: 14px; color: var(--gray-900);
-  background: var(--white); transition: border-color 0.15s; width: 100%;
+  padding: 10px 14px; border: 2px solid var(--gray-900);
+  border-radius: 0; font-size: 14px; color: var(--gray-900);
+  background: var(--white); transition: box-shadow 0.1s; width: 100%;
 }
-.form-input:focus { border-color: var(--green-400); }
+.form-input:focus { box-shadow: 3px 3px 0 var(--green-200); }
 .form-input::placeholder { color: var(--gray-400); }
 .form-textarea { resize: vertical; min-height: 100px; }
 .form-select {
-  padding: 10px 14px; border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius); font-size: 14px; color: var(--gray-900);
-  background: var(--white); cursor: pointer; transition: border-color 0.15s; width: 100%;
+  padding: 10px 14px; border: 2px solid var(--gray-900);
+  border-radius: 0; font-size: 14px; color: var(--gray-900);
+  background: var(--white); cursor: pointer; transition: box-shadow 0.1s; width: 100%;
 }
-.form-select:focus { border-color: var(--green-400); }
+.form-select:focus { box-shadow: 3px 3px 0 var(--green-200); }
 .form-error { font-size: 12px; color: var(--danger); margin-top: 2px; }
 
 /* 배지 */
 .badge {
   display: inline-flex; align-items: center; padding: 3px 10px;
-  border-radius: 999px; font-size: 12px; font-weight: 600;
+  border-radius: 0; font-size: 12px; font-weight: 600; border: 1.5px solid currentColor;
 }
 .badge-green { background: var(--green-100); color: var(--green-600); }
 .badge-gray { background: var(--gray-100); color: var(--gray-500); }
 .badge-red { background: var(--danger-bg); color: var(--danger); }
+.badge-yellow { background: var(--yellow-100); color: var(--yellow-600); }
+.badge-outline { background: var(--white); color: var(--gray-700); }
 
 /* 레이아웃 */
-.container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
 .page { padding-top: calc(var(--header-height) + 32px); padding-bottom: 60px; min-height: 100vh; }
 
 /* 스피너 */

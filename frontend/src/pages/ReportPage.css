@@ -1,0 +1,8 @@
+.report-title { font-family: var(--font-pixel); font-size: 22px; font-weight: 400; color: var(--gray-900); margin-bottom: 20px; letter-spacing: -0.5px; }
+
+.report-form { padding: 32px 36px; display: flex; flex-direction: column; gap: 22px; }
+.report-form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
+
+.report-done { padding: 48px 36px; text-align: center; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+
+@media (max-width: 600px) { .report-form { padding: 24px 20px; } }

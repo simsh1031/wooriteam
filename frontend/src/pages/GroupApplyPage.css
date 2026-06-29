@@ -1,0 +1,9 @@
+.group-apply-title { font-family: var(--font-pixel); font-size: 24px; font-weight: 400; color: var(--gray-900); letter-spacing: -0.5px; margin-bottom: 20px; }
+.group-apply-card { padding: 28px; max-width: 600px; display: flex; flex-direction: column; gap: 12px; }
+.group-apply-name { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+.group-apply-desc { font-size: 14px; color: var(--gray-500); line-height: 1.6; white-space: pre-wrap; }
+.group-apply-meta { display: flex; gap: 14px; font-size: 13px; color: var(--gray-400); }
+.group-apply-status { font-size: 13px; color: var(--green-600); background: var(--green-50); padding: 10px 14px; }
+.group-apply-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.group-apply-form { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.group-apply-done { padding: 60px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 480px; margin: 0 auto; }

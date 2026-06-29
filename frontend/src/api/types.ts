@@ -1,6 +1,17 @@
 export type RoleType = 'BACKEND' | 'FRONTEND' | 'DESIGN' | 'PLANNING';
 export type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 export type ProjectType = 'SIDE_PROJECT' | 'GRADUATION' | 'HACKATHON' | 'STUDY' | 'OTHER';
+export type CareerType = 'NON_MAJOR_STUDENT' | 'MAJOR_STUDENT' | 'BOOTCAMP' | 'JOB_SEEKER' | 'JUNIOR' | 'SENIOR' | 'OTHER';
+
+export const CAREER_TYPE_LABELS: Record<CareerType, string> = {
+  NON_MAJOR_STUDENT: '비전공자 대학생',
+  MAJOR_STUDENT: '전공자 대학생',
+  BOOTCAMP: '부트캠프 수강생/수료생',
+  JOB_SEEKER: '취업 준비생',
+  JUNIOR: '주니어 개발자',
+  SENIOR: '경력 개발자',
+  OTHER: '기타',
+};
 
 export const ROLE_LABELS: Record<RoleType, string> = {
   BACKEND: '백엔드',
@@ -48,10 +59,20 @@ export interface PostDetailResponse {
   difficulty: Difficulty | null;
   projectType: ProjectType | null;
   closed: boolean;
+  applicationDeadline: string | null;
+  projectStartDate: string | null;
+  projectEndDate: string | null;
   createdAt: string;
   authorId: number;
   authorNickname: string;
+  groupId: number | null;
+  groupName: string | null;
   roles: PostRoleResponse[];
+}
+
+export interface PostRoleStack {
+  roleType: RoleType;
+  techStack: string | null;
 }
 
 export interface PostSummaryResponse {
@@ -60,9 +81,15 @@ export interface PostSummaryResponse {
   difficulty: Difficulty | null;
   projectType: ProjectType | null;
   closed: boolean;
+  applicationDeadline: string | null;
+  projectStartDate: string | null;
+  projectEndDate: string | null;
   createdAt: string;
   authorNickname: string;
+  groupId: number | null;
+  groupName: string | null;
   roleTypes: RoleType[];
+  roleStacks: PostRoleStack[];
 }
 
 export interface ApplicationResponse {
@@ -75,6 +102,7 @@ export interface ApplicationResponse {
   experience: string | null;
   contact: string;
   createdAt: string;
+  withdrawn: boolean;
 }
 
 export interface MyApplicationResponse {
@@ -92,10 +120,138 @@ export interface PostRoleRequest {
   techStack: string;
 }
 
+export interface ReportRequest {
+  postId: number;
+  title: string;
+  content: string;
+}
+
 export interface PostCreateRequest {
   title: string;
   description: string;
   difficulty: Difficulty | '';
   projectType: ProjectType | '';
+  applicationDeadline: string | '';
+  projectStartDate: string | '';
+  projectEndDate: string | '';
   roles: PostRoleRequest[];
+  groupId?: number | null;
 }
+
+export interface UserProfileResponse {
+  userId: number;
+  nickname: string;
+  email: string;
+  techStack: string | null;
+  careerType: CareerType | null;
+  experience: string | null;
+  isPublic: boolean;
+  contactEmail: string | null;
+}
+
+export interface PublicProfileSummaryResponse {
+  userId: number;
+  nickname: string;
+  techStack: string | null;
+  careerType: CareerType | null;
+}
+
+export interface PublicProfileDetailResponse {
+  userId: number;
+  nickname: string;
+  email: string | null;
+  techStack: string | null;
+  careerType: CareerType | null;
+  experience: string | null;
+}
+
+export interface UserProfileRequest {
+  techStack: string;
+  careerType: CareerType | null;
+  experience: string;
+  isPublic: boolean;
+  contactEmail: string;
+}
+
+export interface GroupSummaryResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerId: number;
+  ownerNickname: string;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface GroupMemberResponse {
+  id: number;
+  userId: number;
+  nickname: string;
+  status: 'PENDING' | 'APPROVED';
+  joinedAt: string;
+  introduction: string | null;
+  experience: string | null;
+  portfolioLink: string | null;
+  email: string | null;
+}
+
+export interface GroupDetailResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerId: number;
+  ownerNickname: string;
+  memberCount: number;
+  createdAt: string;
+  myStatus: 'OWNER' | 'PENDING' | 'APPROVED' | 'NONE';
+  members: GroupMemberResponse[];
+  pendingMembers: GroupMemberResponse[] | null;
+}
+
+export interface MyGroupResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  role: 'OWNER' | 'MEMBER';
+  memberCount: number;
+}
+
+export interface GroupCreateRequest {
+  name: string;
+  description: string;
+}
+
+export interface GroupJoinRequest {
+  introduction: string;
+  experience: string;
+  portfolioLink: string;
+  email: string;
+}
+
+export const TECH_STACKS: Record<RoleType, string[]> = {
+  BACKEND: [
+    '협의 후 결정',
+    'Java', 'Spring Boot', 'Spring MVC', 'Spring JPA', 'Node.js', 'Express.js', 'NestJS',
+    'Python', 'Django', 'FastAPI', 'Flask', 'Go', 'Rust', 'PHP', 'Laravel',
+    'Ruby', 'Ruby on Rails', 'C', 'C++', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis',
+    'Docker', 'Kubernetes', 'AWS', 'REST API', 'GraphQL', 'gRPC',
+  ],
+  FRONTEND: [
+    '협의 후 결정',
+    'HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Vue.js', 'Angular', 'Svelte',
+    'Next.js', 'Nuxt.js', 'TailwindCSS', 'Sass/SCSS', 'Bootstrap', 'jQuery',
+    'Webpack', 'Vite', 'Redux', 'Zustand', 'Recoil', 'React Native', 'Flutter',
+    'Three.js', 'D3.js', 'Styled-components',
+  ],
+  DESIGN: [
+    '협의 후 결정',
+    'Figma', 'Adobe Photoshop', 'Adobe Illustrator', 'Adobe XD', 'Adobe After Effects',
+    'Adobe Premiere Pro', 'Sketch', 'Zeplin', 'InVision', 'Canva', 'Blender',
+    'Cinema 4D', 'Procreate', 'Webflow', 'Framer', 'ProtoPie',
+  ],
+  PLANNING: [
+    '협의 후 결정',
+    'Notion', 'Confluence', 'Jira', 'Trello', 'Miro', 'Figma', 'Asana', 'Linear',
+    'ClickUp', 'Slack', 'Google Workspace', 'PowerPoint', 'Excel', 'Aha!', 'Balsamiq',
+  ],
+};

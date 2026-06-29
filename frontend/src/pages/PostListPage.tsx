@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getPosts } from '../api/posts';
-import type { PostSummaryResponse, RoleType } from '../api/types';
+import type { Difficulty, PostSummaryResponse, ProjectType, RoleType } from '../api/types';
+import { DIFFICULTY_LABELS, PROJECT_TYPE_LABELS } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import PostCard from '../components/PostCard';
+import TechStackSelector from '../components/TechStackSelector';
+import SelectDropdown from '../components/SelectDropdown';
 import './PostListPage.css';
 
 const TABS: { label: string; value: RoleType | 'ALL' }[] = [
@@ -14,6 +17,9 @@ const TABS: { label: string; value: RoleType | 'ALL' }[] = [
   { label: '기획', value: 'PLANNING' },
 ];
 
+const DIFFICULTIES: Difficulty[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+const PROJECT_TYPES: ProjectType[] = ['SIDE_PROJECT', 'GRADUATION', 'HACKATHON', 'STUDY', 'OTHER'];
+
 export default function PostListPage() {
   const { isLoggedIn } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,17 +29,43 @@ export default function PostListPage() {
   const [posts, setPosts] = useState<PostSummaryResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
+  const [projectType, setProjectType] = useState<ProjectType | ''>('');
+  const [selectedTechStacks, setSelectedTechStacks] = useState<string[]>([]);
+
+  const effectiveRole: RoleType = activeTab === 'ALL' ? 'BACKEND' : activeTab;
+
   useEffect(() => {
-    setLoading(true);
-    getPosts(activeTab === 'ALL' ? undefined : activeTab)
-      .then((res) => setPosts(res.data.data))
-      .finally(() => setLoading(false));
+    setSelectedTechStacks([]);
   }, [activeTab]);
 
+  useEffect(() => {
+    setLoading(true);
+    getPosts({
+      role: activeTab === 'ALL' ? undefined : activeTab,
+      difficulty: difficulty || undefined,
+      projectType: projectType || undefined,
+      techStack: selectedTechStacks.length > 0 ? selectedTechStacks : undefined,
+    })
+      .then((res) => setPosts(res.data.data))
+      .finally(() => setLoading(false));
+  }, [activeTab, difficulty, projectType, selectedTechStacks]);
+
   const selectTab = (tab: RoleType | 'ALL') => {
+    setDifficulty('');
+    setProjectType('');
+    setSelectedTechStacks([]);
     if (tab === 'ALL') setSearchParams({});
     else setSearchParams({ role: tab });
   };
+
+  const resetFilters = () => {
+    setDifficulty('');
+    setProjectType('');
+    setSelectedTechStacks([]);
+  };
+
+  const hasFilter = difficulty || projectType || selectedTechStacks.length > 0;
 
   return (
     <div className="post-list-page page">
@@ -60,19 +92,56 @@ export default function PostListPage() {
           ))}
         </div>
 
+        <div className="filter-bar">
+          <div className="filter-dropdown">
+            <SelectDropdown
+              options={DIFFICULTIES.map((d) => ({ value: d, label: DIFFICULTY_LABELS[d] }))}
+              value={difficulty}
+              onChange={(v) => setDifficulty(v as Difficulty | '')}
+              placeholder="난이도 전체"
+            />
+          </div>
+
+          <div className="filter-dropdown">
+            <SelectDropdown
+              options={PROJECT_TYPES.map((pt) => ({ value: pt, label: PROJECT_TYPE_LABELS[pt] }))}
+              value={projectType}
+              onChange={(v) => setProjectType(v as ProjectType | '')}
+              placeholder="모집 유형 전체"
+            />
+          </div>
+
+          <div className="filter-tech">
+            <TechStackSelector
+              roleType={effectiveRole}
+              selected={selectedTechStacks}
+              onChange={setSelectedTechStacks}
+              placeholder={`기술 스택 필터 (${activeTab === 'ALL' ? '전체' : TABS.find(t => t.value === activeTab)?.label})`}
+            />
+          </div>
+
+          {hasFilter && (
+            <button className="btn btn-ghost btn-sm filter-reset" onClick={resetFilters}>
+              필터 초기화
+            </button>
+          )}
+        </div>
+
         {loading ? (
           <div className="spinner" />
         ) : posts.length === 0 ? (
           <div className="empty-state">
-            <p>아직 공고가 없어요.</p>
-            {isLoggedIn && (
+            <p>{hasFilter ? '필터 조건에 맞는 공고가 없어요.' : '아직 공고가 없어요.'}</p>
+            {hasFilter ? (
+              <button className="btn btn-outline" style={{ marginTop: 16 }} onClick={resetFilters}>필터 초기화</button>
+            ) : isLoggedIn && (
               <Link to="/posts/new" className="btn btn-outline" style={{ marginTop: 16 }}>첫 공고 올리기</Link>
             )}
           </div>
         ) : (
           <div className="post-grid">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} activeRole={activeTab !== 'ALL' ? activeTab : undefined} />
             ))}
           </div>
         )}

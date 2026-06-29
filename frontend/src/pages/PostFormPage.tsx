@@ -1,8 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { createPost, getPost, updatePost } from '../api/posts';
+import { getGroup } from '../api/groups';
 import type { Difficulty, PostRoleRequest, ProjectType, RoleType } from '../api/types';
 import { ROLE_LABELS } from '../api/types';
+import TechStackSelector from '../components/TechStackSelector';
+import SelectDropdown from '../components/SelectDropdown';
+import DateInput from '../components/DateInput';
 import './PostFormPage.css';
 
 const ROLE_OPTIONS: RoleType[] = ['BACKEND', 'FRONTEND', 'DESIGN', 'PLANNING'];
@@ -25,13 +29,20 @@ export default function PostFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ? Number(searchParams.get('groupId')) : null;
+  const [groupName, setGroupName] = useState('');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty | ''>('');
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
+  const [applicationDeadline, setApplicationDeadline] = useState('');
+  const [projectStartDate, setProjectStartDate] = useState('');
+  const [projectEndDate, setProjectEndDate] = useState('');
   const [selectedRoles, setSelectedRoles] = useState<RoleType[]>([]);
   const [roleDetails, setRoleDetails] = useState<Record<RoleType, PostRoleRequest>>({} as any);
+  const [roleTechStacks, setRoleTechStacks] = useState<Record<RoleType, string[]>>({} as any);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -43,13 +54,26 @@ export default function PostFormPage() {
       setDescription(p.description ?? '');
       setDifficulty(p.difficulty ?? '');
       setProjectType(p.projectType ?? '');
+      setApplicationDeadline(p.applicationDeadline ?? '');
+      setProjectStartDate(p.projectStartDate ?? '');
+      setProjectEndDate(p.projectEndDate ?? '');
       const roles = p.roles.map((r) => r.roleType);
       setSelectedRoles(roles);
       const details: Record<string, PostRoleRequest> = {};
-      p.roles.forEach((r) => { details[r.roleType] = { roleType: r.roleType, description: r.description ?? '', techStack: r.techStack ?? '' }; });
+      const stacks: Record<string, string[]> = {};
+      p.roles.forEach((r) => {
+        details[r.roleType] = { roleType: r.roleType, description: r.description ?? '', techStack: r.techStack ?? '' };
+        stacks[r.roleType] = r.techStack ? r.techStack.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      });
       setRoleDetails(details as any);
+      setRoleTechStacks(stacks as any);
     });
   }, [id]);
+
+  useEffect(() => {
+    if (!groupId || isEdit) return;
+    getGroup(groupId).then((res) => setGroupName(res.data.data.name)).catch(() => {});
+  }, [groupId, isEdit]);
 
   const toggleRole = (role: RoleType) => {
     setSelectedRoles((prev) =>
@@ -57,11 +81,19 @@ export default function PostFormPage() {
         ? prev.filter((r) => r !== role)
         : [...prev, role]
     );
-    setRoleDetails((prev) => prev[role] ? prev : { ...prev, [role]: emptyRole(role) });
+    if (!roleDetails[role]) {
+      setRoleDetails((prev) => ({ ...prev, [role]: emptyRole(role) }));
+      setRoleTechStacks((prev) => ({ ...prev, [role]: [] }));
+    }
   };
 
-  const updateRoleDetail = (role: RoleType, field: 'description' | 'techStack', value: string) => {
-    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], [field]: value } }));
+  const updateRoleDescription = (role: RoleType, value: string) => {
+    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], description: value } }));
+  };
+
+  const updateRoleTechStack = (role: RoleType, stacks: string[]) => {
+    setRoleTechStacks((prev) => ({ ...prev, [role]: stacks }));
+    setRoleDetails((prev) => ({ ...prev, [role]: { ...prev[role], techStack: stacks.join(', ') } }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -73,7 +105,11 @@ export default function PostFormPage() {
       title, description,
       difficulty: difficulty || ('' as any),
       projectType: projectType || ('' as any),
+      applicationDeadline: applicationDeadline || '',
+      projectStartDate: projectStartDate || '',
+      projectEndDate: projectEndDate || '',
       roles: selectedRoles.map((r) => roleDetails[r] ?? emptyRole(r)),
+      groupId: !isEdit ? groupId : undefined,
     };
     try {
       if (isEdit) {
@@ -94,6 +130,9 @@ export default function PostFormPage() {
     <div className="post-form-page page">
       <div className="container">
         <h1 className="post-form-title">{isEdit ? '공고 수정' : '공고 작성'}</h1>
+        {groupId && !isEdit && (
+          <p className="post-form-group-notice">'{groupName || `그룹 #${groupId}`}' 그룹 전용 공고로 등록됩니다.</p>
+        )}
         <form onSubmit={handleSubmit} className="post-form card">
           <div className="form-group">
             <label className="form-label">제목 *</label>
@@ -103,20 +142,45 @@ export default function PostFormPage() {
             />
           </div>
 
+          <div className="form-group">
+            <label className="form-label">지원 마감일</label>
+            <DateInput
+              className="form-input"
+              value={applicationDeadline} onChange={setApplicationDeadline}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">프로젝트 기한</label>
+            <div className="form-row">
+              <DateInput
+                className="form-input"
+                value={projectStartDate} onChange={setProjectStartDate}
+              />
+              <DateInput
+                className="form-input"
+                value={projectEndDate} onChange={setProjectEndDate}
+                min={projectStartDate || undefined}
+              />
+            </div>
+          </div>
+
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">난이도</label>
-              <select className="form-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty | '')}>
-                <option value="">선택 안함</option>
-                {DIFFICULTY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <SelectDropdown
+                options={DIFFICULTY_OPTIONS}
+                value={difficulty}
+                onChange={(v) => setDifficulty(v as Difficulty | '')}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">프로젝트 유형</label>
-              <select className="form-select" value={projectType} onChange={(e) => setProjectType(e.target.value as ProjectType | '')}>
-                <option value="">선택 안함</option>
-                {PROJECT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
+              <SelectDropdown
+                options={PROJECT_TYPE_OPTIONS}
+                value={projectType}
+                onChange={(v) => setProjectType(v as ProjectType | '')}
+              />
             </div>
           </div>
 
@@ -156,18 +220,32 @@ export default function PostFormPage() {
                   className="form-input form-textarea"
                   placeholder={`${ROLE_LABELS[role]} 역할의 할 일을 설명해 주세요`}
                   value={roleDetails[role]?.description ?? ''}
-                  onChange={(e) => updateRoleDetail(role, 'description', e.target.value)}
+                  onChange={(e) => updateRoleDescription(role, e.target.value)}
                   rows={3}
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">기술 스택 (쉼표로 구분)</label>
-                <input
-                  className="form-input"
-                  placeholder="예: Java, Spring Boot, MySQL"
-                  value={roleDetails[role]?.techStack ?? ''}
-                  onChange={(e) => updateRoleDetail(role, 'techStack', e.target.value)}
+              <div className="form-group form-group-spaced">
+                <label className="form-label">기술 스택</label>
+                <TechStackSelector
+                  roleType={role}
+                  selected={roleTechStacks[role] ?? []}
+                  onChange={(stacks) => updateRoleTechStack(role, stacks)}
+                  placeholder={`${ROLE_LABELS[role]} 기술 스택 선택`}
                 />
+                {(roleTechStacks[role] ?? []).length > 0 && (
+                  <div className="ts-tags ts-tags-below">
+                    {(roleTechStacks[role] ?? []).map((s) => (
+                      <span key={s} className="ts-tag">
+                        {s}
+                        <button
+                          type="button"
+                          className="ts-tag-remove"
+                          onClick={() => updateRoleTechStack(role, (roleTechStacks[role] ?? []).filter((x) => x !== s))}
+                        >×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}

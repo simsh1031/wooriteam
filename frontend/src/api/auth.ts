@@ -10,5 +10,8 @@ export const login = (email: string, password: string) =>
 export const logout = () =>
   client.post<ApiResponse<null>>('/api/auth/logout');
 
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  client.patch<ApiResponse<null>>('/api/my/password', { currentPassword, newPassword });
+
 export const withdraw = () =>
   client.delete<ApiResponse<null>>('/api/auth/withdraw');

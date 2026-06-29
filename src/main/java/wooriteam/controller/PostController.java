@@ -10,8 +10,11 @@ import wooriteam.dto.request.PostCreateRequest;
 import wooriteam.dto.request.PostUpdateRequest;
 import wooriteam.dto.response.PostDetailResponse;
 import wooriteam.dto.response.PostSummaryResponse;
+import wooriteam.enums.Difficulty;
+import wooriteam.enums.ProjectType;
 import wooriteam.enums.RoleType;
 import wooriteam.security.CustomUserDetails;
+import wooriteam.service.BookmarkService;
 import wooriteam.service.PostService;
 
 import java.util.List;
@@ -22,11 +25,16 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final BookmarkService bookmarkService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getPosts(
-            @RequestParam(required = false) RoleType role) {
-        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(role)));
+            @RequestParam(required = false) RoleType role,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) ProjectType projectType,
+            @RequestParam(required = false) List<String> techStack,
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(role, difficulty, projectType, techStack, keyword)));
     }
 
     @GetMapping("/{postId}")
@@ -62,6 +70,22 @@ public class PostController {
             @PathVariable Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         postService.closePost(postId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @PostMapping("/{postId}/bookmark")
+    public ResponseEntity<ApiResponse<Void>> addBookmark(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookmarkService.addBookmark(postId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @DeleteMapping("/{postId}/bookmark")
+    public ResponseEntity<ApiResponse<Void>> removeBookmark(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bookmarkService.removeBookmark(postId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

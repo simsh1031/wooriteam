@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: wooriteam
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    open-in-view: false
+  mail:
+    host: localhost
+    port: 587
+    username:
+    password:
+
+app:
+  mail:
+    enabled: false
+
+jwt:
+  secret: test-secret-key-must-be-at-least-32-characters-long-for-testing
+  expiration: 86400000
+
+cors:
+  allowed-origins: http://localhost:5173
+
+server:
+  port: 8080

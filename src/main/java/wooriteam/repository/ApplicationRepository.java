@@ -6,9 +6,12 @@ import wooriteam.entity.Post;
 import wooriteam.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
-    List<Application> findByPost(Post post);
-    List<Application> findByUserOrderByCreatedAtDesc(User user);
-    boolean existsByPostAndRoleIdAndUser(wooriteam.entity.Post post, Long roleId, User user);
+    List<Application> findByPostAndWithdrawnFalse(Post post);
+    List<Application> findByUserAndWithdrawnFalseOrderByCreatedAtDesc(User user);
+    Optional<Application> findByPostAndUser(Post post, User user);
+    void deleteByUser(User user);
+    void deleteByPostIn(List<Post> posts);
 }

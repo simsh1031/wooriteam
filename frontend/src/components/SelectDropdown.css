@@ -1,0 +1,2 @@
+.ts-selected-label { color: var(--gray-900); font-size: 14px; }
+.ts-option-active { background: var(--green-50); color: var(--green-600); font-weight: 600; }

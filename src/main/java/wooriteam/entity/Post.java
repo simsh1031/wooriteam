@@ -5,6 +5,7 @@ import lombok.*;
 import wooriteam.enums.Difficulty;
 import wooriteam.enums.ProjectType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +40,21 @@ public class Post {
     @Column(name = "is_closed", nullable = false)
     private boolean closed = false;
 
+    @Column(name = "application_deadline")
+    private LocalDate applicationDeadline;
+
+    @Column(name = "project_start_date")
+    private LocalDate projectStartDate;
+
+    @Column(name = "project_end_date")
+    private LocalDate projectEndDate;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostRole> roles = new ArrayList<>();
@@ -51,22 +65,38 @@ public class Post {
     }
 
     @Builder
-    public Post(User user, String title, String description, Difficulty difficulty, ProjectType projectType) {
+    public Post(User user, String title, String description, Difficulty difficulty, ProjectType projectType,
+                 LocalDate applicationDeadline, LocalDate projectStartDate, LocalDate projectEndDate, Group group) {
         this.user = user;
         this.title = title;
         this.description = description;
         this.difficulty = difficulty;
         this.projectType = projectType;
+        this.applicationDeadline = applicationDeadline;
+        this.projectStartDate = projectStartDate;
+        this.projectEndDate = projectEndDate;
+        this.group = group;
     }
 
-    public void update(String title, String description, Difficulty difficulty, ProjectType projectType) {
+    public void update(String title, String description, Difficulty difficulty, ProjectType projectType,
+                        LocalDate applicationDeadline, LocalDate projectStartDate, LocalDate projectEndDate) {
         this.title = title;
         this.description = description;
         this.difficulty = difficulty;
         this.projectType = projectType;
+        this.applicationDeadline = applicationDeadline;
+        this.projectStartDate = projectStartDate;
+        this.projectEndDate = projectEndDate;
     }
 
     public void close() {
         this.closed = true;
+    }
+
+    public boolean isClosed() {
+        if (closed) {
+            return true;
+        }
+        return applicationDeadline != null && applicationDeadline.isBefore(LocalDate.now());
     }
 }

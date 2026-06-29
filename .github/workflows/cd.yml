@@ -1,0 +1,158 @@
+name: CD - Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'gradle/**'
+      - 'Dockerfile'
+      - '.github/workflows/cd.yml'
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY_NAME: wooriteam
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build & test
+        run: ./gradlew build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Resolve ECR repository URI
+        id: ecr-repo
+        run: |
+          URI=$(aws ecr describe-repositories \
+            --repository-names "${{ env.ECR_REPOSITORY_NAME }}" \
+            --query 'repositories[0].repositoryUri' --output text)
+          echo "uri=$URI" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        run: docker build -t ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }} .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }}
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+
+      - name: Push image to ECR
+        run: |
+          docker push ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }}
+          docker tag ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }} ${{ steps.ecr-repo.outputs.uri }}:latest
+          docker push ${{ steps.ecr-repo.outputs.uri }}:latest
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ secrets.ECS_TASK_DEFINITION }} \
+            --query taskDefinition > task-definition.json
+
+      - name: Save current task definition ARN (rollback target)
+        id: current-task-def
+        run: |
+          ARN=$(jq -r '.taskDefinitionArn' task-definition.json)
+          echo "arn=$ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Render new task definition with new image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ secrets.CONTAINER_NAME }}
+          image: ${{ steps.ecr-repo.outputs.uri }}:${{ github.sha }}
+
+      - name: Deploy to ECS
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      - name: Smoke test
+        id: smoke-test
+        run: |
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "X-From-CloudFront: ${{ secrets.CLOUDFRONT_ORIGIN_SECRET }}" \
+              "http://${{ secrets.ALB_DNS }}/actuator/health")
+            if [ "$STATUS" = "200" ]; then
+              echo "Smoke test passed (status=$STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: status=$STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "Smoke test failed"
+          exit 1
+
+      - name: Rollback to previous task definition on failure
+        if: failure() && steps.render-task-def.outcome == 'success'
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --task-definition ${{ steps.current-task-def.outputs.arn }} \
+            --force-new-deployment
+          aws ecs wait services-stable \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --services ${{ secrets.ECS_SERVICE }}
+
+      - name: Notify Discord (success)
+        if: success()
+        run: |
+          curl -sf -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg title "✅ 백엔드 배포 성공" \
+              --arg desc "${{ github.event.head_commit.message }}" \
+              --arg sha "${{ github.sha }}" \
+              '{embeds: [{title: $title, description: $desc, color: 65280, fields: [{name: "Commit", value: $sha}]}]}')"
+
+      - name: Notify Discord (failure)
+        if: failure()
+        run: |
+          curl -sf -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg title "❌ 백엔드 배포 실패" \
+              --arg desc "${{ github.event.head_commit.message }}" \
+              --arg sha "${{ github.sha }}" \
+              '{embeds: [{title: $title, description: $desc, color: 16711680, fields: [{name: "Commit", value: $sha}]}]}')"
