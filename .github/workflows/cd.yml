@@ -2,7 +2,7 @@ name: CD - Backend
 
 on:
   push:
-    branches: [fix/email] #[develop] #[main]
+    branches: [develop] #[main]
     paths:
       - 'src/**'
       - 'build.gradle'
